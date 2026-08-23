@@ -132,7 +132,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .poNumber(poNumber)
                 .purchaseRequest(request)
                 .vendor(vendor)
-                .createdBy(creator)
+                .createdByUser(creator)
                 .orderDate(LocalDateTime.now())
                 .expectedDeliveryDate(expectedDeliveryDate)
                 .status(PurchaseOrderStatus.DRAFT)

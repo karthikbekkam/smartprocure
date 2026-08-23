@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/smartprocure_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: ${DB_URL:jdbc:mysql://localhost:3306/smartprocure?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:password}
+    password: ${DB_PASSWORD:SmartProcure@123}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20

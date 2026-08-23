@@ -2,49 +2,49 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="sidebar" class="sidebar">
-    <a href="/smartprocure/dashboard" class="sidebar-brand">
+    <a th:href="@{/dashboard}" class="sidebar-brand">
         <i class="bi bi-shield-check text-primary"></i>
         <span>SmartProcure</span>
     </a>
     <ul class="sidebar-nav">
         <li class="nav-item">
-            <a href="/smartprocure/dashboard" class="nav-link">
+            <a th:href="@{/dashboard}" class="nav-link">
                 <i class="bi bi-speedometer2"></i>
                 <span>Dashboard</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="/smartprocure/vendors" class="nav-link">
+            <a th:href="@{/vendors}" class="nav-link">
                 <i class="bi bi-building"></i>
                 <span>Vendors</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="/smartprocure/products" class="nav-link">
+            <a th:href="@{/products}" class="nav-link">
                 <i class="bi bi-box-seam"></i>
                 <span>Products Catalog</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="/smartprocure/purchase-requests" class="nav-link">
+            <a th:href="@{/purchase-requests}" class="nav-link">
                 <i class="bi bi-file-earmark-text"></i>
                 <span>Purchase Requests</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="/smartprocure/purchase-orders" class="nav-link">
+            <a th:href="@{/purchase-orders}" class="nav-link">
                 <i class="bi bi-cart-check"></i>
                 <span>Purchase Orders</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="/smartprocure/invoices" class="nav-link">
+            <a th:href="@{/invoices}" class="nav-link">
                 <i class="bi bi-receipt"></i>
                 <span>Invoices</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="/smartprocure/inventory" class="nav-link">
+            <a th:href="@{/inventory}" class="nav-link">
                 <i class="bi bi-boxes"></i>
                 <span>Inventory & Warehouses</span>
             </a>

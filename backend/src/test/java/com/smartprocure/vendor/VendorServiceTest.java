@@ -2,6 +2,8 @@ package com.smartprocure.vendor;
 
 import com.smartprocure.common.exception.DuplicateResourceException;
 import com.smartprocure.domain.Vendor;
+import com.smartprocure.domain.repository.AuditLogRepository;
+import com.smartprocure.domain.repository.NotificationRepository;
 import com.smartprocure.domain.repository.VendorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,12 @@ class VendorServiceTest {
 
     @Mock
     private VendorRepository vendorRepository;
+
+    @Mock
+    private AuditLogRepository auditLogRepository;
+
+    @Mock
+    private NotificationRepository notificationRepository;
 
     @InjectMocks
     private VendorService vendorService;
