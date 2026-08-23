@@ -1,0 +1,241 @@
+/* =========================================================
+   SmartProcure Dashboard & Interactive Visuals CSS
+   ========================================================= */
+
+/* ---------- SmartProcure Theme Variables ---------- */
+
+:root {
+  --sp-primary: #4f46e5;
+  --sp-primary-dark: #3730a3;
+  --sp-surface: #ffffff;
+  --sp-background: #f8fafc;
+  --sp-border: #e2e8f0;
+  --sp-text-primary: #0f172a;
+  --sp-text-secondary: #64748b;
+  --sp-text-muted: #94a3b8;
+
+  --sp-gradient-primary: linear-gradient(
+          135deg,
+          #4f46e5 0%,
+          #7c3aed 100%
+  );
+
+  --sp-card-shadow:
+          0 4px 20px rgba(15, 23, 42, 0.08);
+
+  --sp-card-shadow-hover:
+          0 15px 30px rgba(15, 23, 42, 0.12);
+}
+
+/* ---------- Dashboard Background ---------- */
+
+body {
+  background: var(--sp-background);
+  color: var(--sp-text-primary);
+}
+
+/* ---------- KPI Cards ---------- */
+
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 1.25rem;
+  transition:
+          transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--sp-card-shadow);
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sp-card-shadow-hover);
+}
+
+/* ---------- KPI Icon ---------- */
+
+.kpi-icon-wrapper {
+  width: 54px;
+  height: 54px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+/* ---------- KPI Trend ---------- */
+
+.kpi-trend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- Chart Card ---------- */
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--sp-border);
+  margin-bottom: 1rem;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+}
+
+/* ---------- Quick Actions ---------- */
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 1rem;
+  border-radius: 1rem;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  color: var(--sp-text-primary);
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  box-shadow: var(--sp-card-shadow);
+}
+
+.quick-action-btn:hover {
+  background: var(--sp-gradient-primary);
+  color: #ffffff;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+}
+
+.quick-action-btn i {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ---------- Activity Feed ---------- */
+
+.activity-feed-item {
+  position: relative;
+  padding-left: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-left: 2px solid var(--sp-border);
+}
+
+.activity-feed-item:last-child {
+  padding-bottom: 0;
+  border-left-color: transparent;
+}
+
+.activity-dot {
+  position: absolute;
+  left: -7px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sp-primary);
+  border: 2px solid var(--sp-surface);
+}
+
+/* ---------- Glass Table ---------- */
+
+.table-glass {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.table-glass tbody tr {
+  background: var(--sp-surface);
+  border-radius: 0.75rem;
+  box-shadow: var(--sp-card-shadow);
+  transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+}
+
+.table-glass tbody tr:hover {
+  transform: scale(1.005);
+  box-shadow: var(--sp-card-shadow-hover);
+}
+
+.table-glass td,
+.table-glass th {
+  padding: 1rem 1.25rem;
+  vertical-align: middle;
+  border: none;
+}
+
+.table-glass th {
+  color: var(--sp-text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Dashboard Cards ---------- */
+
+.dashboard-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 1rem;
+  box-shadow: var(--sp-card-shadow);
+  transition: all 0.2s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: var(--sp-card-shadow-hover);
+}
+
+/* ---------- Dashboard Headings ---------- */
+
+.dashboard-title {
+  color: var(--sp-text-primary);
+  font-weight: 700;
+}
+
+.dashboard-subtitle {
+  color: var(--sp-text-secondary);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 768px) {
+
+  .kpi-card {
+    border-radius: 1rem;
+  }
+
+  .chart-container {
+    min-height: 220px;
+  }
+
+  .quick-action-btn {
+    padding: 1rem;
+  }
+
+  .table-glass {
+    font-size: 0.9rem;
+  }
+
+  .table-glass td,
+  .table-glass th {
+    padding: 0.75rem;
+  }
+}

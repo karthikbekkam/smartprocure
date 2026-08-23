@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Vendor Management</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-handshake text-primary me-2"></i> Vendor & Supplier Management</h3>
+            <p class="text-muted mb-0">Approve onboarding requests, track vendor performance & tax compliance</p>
+        </div>
+        <a th:href="@{/vendors/new}" class="btn btn-primary shadow-sm"><i class="fa-solid fa-user-plus me-2"></i>Onboard New Vendor</a>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="vendorAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Tax ID / EIN</th>
+                        <th>Contact</th>
+                        <th>Payment Terms</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="vendor : ${vendors}">
+                        <td>
+                            <div class="fw-bold" th:text="${vendor.companyName}">Acme Corp</div>
+                            <div class="text-muted small" th:text="${vendor.address}">Address</div>
+                        </td>
+                        <td><code th:text="${vendor.taxId}">US-TAX-123</code></td>
+                        <td>
+                            <div th:text="${vendor.contactEmail}">email@domain.com</div>
+                            <div class="text-muted extra-small" th:text="${vendor.contactPhone}">+1 555-000</div>
+                        </td>
+                        <td th:text="${vendor.paymentTerms}">NET_30</td>
+                        <td>
+                            <span class="text-warning"><i class="fa-solid fa-star me-1"></i><span th:text="${vendor.rating}">5.0</span></span>
+                        </td>
+                        <td>
+                            <span th:if="${vendor.status != null and vendor.status.name() == 'APPROVED'}" class="badge badge-approved">APPROVED</span>
+                            <span th:if="${vendor.status == null or vendor.status.name() == 'PENDING_APPROVAL'}" class="badge badge-pending">PENDING</span>
+                            <span th:if="${vendor.status != null and vendor.status.name() == 'REJECTED'}" class="badge badge-rejected">REJECTED</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/vendors/{id}(id=${vendor.id})}" class="btn btn-sm btn-outline-primary me-1" title="View Vendor Details"><i class="fa-solid fa-eye"></i></a>
+                            <button th:if="${vendor.status == null or vendor.status.name() == 'PENDING_APPROVAL'}" 
+                                    type="button"
+                                    class="btn btn-sm btn-success me-1 btn-approve-vendor" 
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#confirmApproveVendorModal"
+                                    th:data-vendor-id="${vendor.id}"
+                                    th:data-vendor-name="${vendor.companyName}"
+                                    onclick="promptApproveVendor(this.getAttribute('data-vendor-id'), this.getAttribute('data-vendor-name'))" 
+                                    title="Approve Vendor Qualification">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(vendors)}">
+                        <td colspan="7" class="text-center py-4 text-muted">No vendors registered in system.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Confirm Approve Vendor Modal -->
+    <div class="modal fade" id="confirmApproveVendorModal" tabindex="-1" aria-labelledby="confirmApproveVendorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold" id="confirmApproveVendorModalLabel"><i class="fa-solid fa-user-check me-2"></i> Confirm Vendor Approval</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2 fs-6 font-semibold text-dark">Approve vendor <span id="approveVendorNameText" class="text-success fw-bold">TechCorp Hardware Supplies</span>?</p>
+                    <p class="text-muted small mb-0">Approving this vendor authorizes them for enterprise purchase order distribution and invoice processing.</p>
+                    <input type="hidden" id="approveVendorIdInput">
+                </div>
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="executeApproveVendor()"><i class="fa-solid fa-check me-1"></i> Approve Vendor</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+function showVendorAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById('vendorAlert');
+    if (alertBox) {
+        alertBox.className = isSuccess ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+        alertBox.textContent = msg;
+        alertBox.classList.remove('d-none');
+        setTimeout(() => alertBox.classList.add('d-none'), 3500);
+    }
+}
+
+function promptApproveVendor(id, name) {
+    if (id) document.getElementById('approveVendorIdInput').value = id;
+    if (name) document.getElementById('approveVendorNameText').textContent = name;
+    const modalEl = document.getElementById('confirmApproveVendorModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const confirmApproveVendorModalEl = document.getElementById('confirmApproveVendorModal');
+    if (confirmApproveVendorModalEl) {
+        confirmApproveVendorModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) {
+                const id = event.relatedTarget.getAttribute('data-vendor-id');
+                const name = event.relatedTarget.getAttribute('data-vendor-name');
+                if (id) document.getElementById('approveVendorIdInput').value = id;
+                if (name) document.getElementById('approveVendorNameText').textContent = name;
+            }
+        });
+    }
+});
+
+function executeApproveVendor() {
+    const id = document.getElementById('approveVendorIdInput').value;
+    const name = document.getElementById('approveVendorNameText').textContent;
+
+    fetch(`/smartprocure/api/v1/vendors/${id}/status?status=APPROVED`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to approve vendor.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('confirmApproveVendorModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showVendorAlert(`Vendor ${name} approved successfully!`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showVendorAlert(data.message || 'Failed to approve vendor.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('confirmApproveVendorModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showVendorAlert(err.message || 'Failed to approve vendor.', false);
+    });
+}
+</script>
+</th:block>
+</body>
+</html>

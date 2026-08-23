@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="sidebar" class="app-sidebar d-flex flex-column justify-content-between py-4">
+    <div>
+        <div class="px-4 mb-4 d-flex align-items-center">
+            <a th:href="@{/dashboard}" class="text-white text-decoration-none d-flex align-items-center">
+                <div class="bg-primary text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-boxes-packing fa-lg"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-white mb-0">SmartProcure</h5>
+                    <span class="badge bg-primary text-white extra-small">ENTERPRISE ERP</span>
+                </div>
+            </a>
+        </div>
+
+        <nav class="nav flex-column">
+            <!-- All Roles -->
+            <a class="nav-link-custom" th:href="@{/dashboard}">
+                <i class="fa-solid fa-chart-pie me-3"></i>Dashboard
+            </a>
+
+            <!-- Admin, Procurement, Finance -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'PROCUREMENT_MANAGER', 'PROCUREMENT', 'FINANCE_MANAGER', 'FINANCE')" class="nav-link-custom" th:href="@{/vendors}">
+                <i class="fa-solid fa-handshake me-3"></i>Vendors & Suppliers
+            </a>
+
+            <!-- Admin, Procurement -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'PROCUREMENT_MANAGER', 'PROCUREMENT')" class="nav-link-custom" th:href="@{/products}">
+                <i class="fa-solid fa-layer-group me-3"></i>Products & Catalog
+            </a>
+
+            <!-- Admin, Warehouse -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'WAREHOUSE_MANAGER', 'WAREHOUSE')" class="nav-link-custom" th:href="@{/inventory}">
+                <i class="fa-solid fa-warehouse me-3"></i>Inventory & Stock
+            </a>
+
+            <!-- Admin, Warehouse -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'WAREHOUSE_MANAGER', 'WAREHOUSE')" class="nav-link-custom" th:href="@{/warehouses}">
+                <i class="fa-solid fa-building-user me-3"></i>Warehouses & Hubs
+            </a>
+
+            <!-- Admin, Procurement -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'PROCUREMENT_MANAGER', 'PROCUREMENT')" class="nav-link-custom" th:href="@{/purchase-requests}">
+                <i class="fa-solid fa-file-signature me-3"></i>Purchase Requests
+            </a>
+
+            <!-- All Roles (POs) -->
+            <a class="nav-link-custom" th:href="@{/purchase-orders}">
+                <i class="fa-solid fa-file-contract me-3"></i>Purchase Orders
+            </a>
+
+            <!-- Admin, Finance, Vendor -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'FINANCE_MANAGER', 'FINANCE', 'VENDOR')" class="nav-link-custom" th:href="@{/invoices}">
+                <i class="fa-solid fa-receipt me-3"></i>Invoices & Billing
+            </a>
+
+            <!-- Admin, Finance -->
+            <a sec:authorize="hasAnyRole('ADMIN', 'ADMINISTRATOR', 'FINANCE_MANAGER', 'FINANCE')" class="nav-link-custom" th:href="@{/payments}">
+                <i class="fa-solid fa-credit-card me-3"></i>Payments
+            </a>
+
+            <!-- All Roles -->
+            <a class="nav-link-custom" th:href="@{/profile}">
+                <i class="fa-solid fa-user-gear me-3"></i>My Profile
+            </a>
+        </nav>
+    </div>
+
+    <div class="px-4 pt-3 border-top border-secondary">
+        <a class="nav-link-custom ps-0 text-danger" th:href="@{/login}">
+            <i class="fa-solid fa-right-from-bracket me-3"></i>Sign Out
+        </a>
+    </div>
+</div>
+</body>
+</html>

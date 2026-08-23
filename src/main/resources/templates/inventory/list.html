@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Multi-Warehouse Inventory & Stock</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-warehouse text-warning me-2"></i> Multi-Warehouse Stock Directory</h3>
+            <p class="text-muted small mb-0">Stock level tracking, low-stock threshold alerts, and receiving operations</p>
+        </div>
+        <button class="btn btn-warning text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
+            <i class="fa-solid fa-boxes-packing me-2"></i>Adjust Stock Level
+        </button>
+    </div>
+
+    <!-- Alert Container for Dynamic Toast Feedback -->
+    <div id="stockAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light extra-small text-uppercase">
+                    <tr>
+                        <th>Inventory ID</th>
+                        <th>Product SKU</th>
+                        <th>Warehouse Location</th>
+                        <th>Quantity On Hand</th>
+                        <th>Allocated Qty</th>
+                        <th>Available Qty</th>
+                        <th>Stock Alert</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="inv : ${inventories}">
+                        <td><code th:text="${inv.inventoryCode != null ? inv.inventoryCode : 'INV-' + inv.id}">INV-1</code></td>
+                        <td>
+                            <div class="fw-bold" th:text="${inv.productSku != null ? inv.productSku : 'SKU-LAP-001'}">SKU-LAP-001</div>
+                            <div class="text-muted extra-small" th:text="${inv.productName != null ? inv.productName : 'Laptops'}">Laptops</div>
+                        </td>
+                        <td th:text="${inv.warehouseName != null ? inv.warehouseName : 'Primary Eastern Logistics Hub'}">Primary Eastern Logistics Hub</td>
+                        <td class="fw-bold text-dark" th:text="${inv.quantityOnHand}">101</td>
+                        <td th:text="${inv.quantityAllocated}">10</td>
+                        <td class="fw-bold text-success" th:text="${inv.quantityAvailable}">91</td>
+                        <td>
+                            <span th:if="${inv.stockAlert == 'OUT OF STOCK' or inv.quantityOnHand <= 0}" class="badge bg-danger"><i class="fa-solid fa-circle-xmark me-1"></i> OUT OF STOCK</span>
+                            <span th:if="${inv.stockAlert == 'LOW STOCK' or (inv.quantityOnHand > 0 and inv.quantityAvailable <= inv.minStockLevel)}" class="badge bg-warning text-dark"><i class="fa-solid fa-triangle-exclamation me-1"></i> LOW STOCK</span>
+                            <span th:if="${inv.stockAlert == 'NORMAL' or (inv.quantityOnHand > 0 and inv.quantityAvailable > inv.minStockLevel)}" class="badge bg-success"><i class="fa-solid fa-check me-1"></i> NORMAL</span>
+                        </td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-xs btn-outline-warning text-dark me-1 btn-adjust-stock"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#adjustStockModal"
+                                    th:data-inv-id="${inv.id}"
+                                    th:data-inv-code="${inv.inventoryCode != null ? inv.inventoryCode : 'INV-' + inv.id}"
+                                    th:data-product-id="${inv.productId}"
+                                    th:data-product-sku="${inv.productSku}"
+                                    th:data-product-name="${inv.productName}"
+                                    th:data-warehouse-id="${inv.warehouseId}"
+                                    th:data-warehouse-name="${inv.warehouseName}"
+                                    th:data-qty-hand="${inv.quantityOnHand}"
+                                    onclick="promptAdjustStock(this)"
+                                    title="Adjust Stock Level">
+                                <i class="fa-solid fa-boxes-packing me-1"></i> Adjust Stock
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(inventories)}">
+                        <td colspan="8" class="text-center py-4 text-muted">No stock items registered in system.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Adjust Stock Level Modal -->
+    <div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-warning text-dark py-3">
+                    <h5 class="modal-title fw-bold" id="adjustStockModalLabel"><i class="fa-solid fa-boxes-stacked me-2"></i> ADJUST STOCK LEVEL</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="adjustStockForm" onsubmit="submitStockAdjustment(event)">
+                    <input type="hidden" id="adjInventoryId">
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3 border-bottom pb-3">
+                            <div class="col-6">
+                                <label class="extra-small text-muted text-uppercase d-block">Inventory Record</label>
+                                <strong id="adjInvCodeText" class="text-dark fs-6">INV-1</strong>
+                            </div>
+                            <div class="col-6">
+                                <label class="extra-small text-muted text-uppercase d-block">Current Quantity</label>
+                                <span id="adjCurrentQtyText" class="fw-bold text-primary fs-6">101</span>
+                            </div>
+                            <div class="col-6">
+                                <label class="extra-small text-muted text-uppercase d-block">Product</label>
+                                <span id="adjProductSkuText" class="fw-semibold text-dark">SKU-LAP-001</span>
+                            </div>
+                            <div class="col-6">
+                                <label class="extra-small text-muted text-uppercase d-block">Warehouse</label>
+                                <span id="adjWarehouseNameText" class="fw-semibold text-dark">Primary Eastern Logistics Hub</span>
+                            </div>
+                        </div>
+
+                        <div id="catalogSelectContainer" class="d-none mb-3">
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Target Product</label>
+                                <select id="adjProductId" class="form-select">
+                                    <option value="" disabled selected>-- Select Product --</option>
+                                    <option th:each="p : ${products}" th:value="${p.id}" th:text="${p.name + ' (' + p.sku + ')'}">Laptop (SKU-1001)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Target Warehouse Facility</label>
+                                <select id="adjWarehouseId" class="form-select">
+                                    <option value="" disabled selected>-- Select Warehouse Facility --</option>
+                                    <option th:each="w : ${warehouses}" th:value="${w.id}" th:text="${w.name + ' (' + w.code + ')'}">Central WH</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Adjustment Type</label>
+                                <select id="adjType" class="form-select" required>
+                                    <option value="INCREASE" selected>Increase (Receiving / Restock)</option>
+                                    <option value="DECREASE">Decrease (Damage / Shrinkage)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Adjustment Quantity</label>
+                                <input type="number" id="adjQuantity" class="form-control" min="1" placeholder="10" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Reason / Notes</label>
+                            <textarea id="adjReason" class="form-control" rows="2" placeholder="e.g. Verified stock count audit reconciliation" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning text-dark btn-sm fw-bold"><i class="fa-solid fa-check me-1"></i> Apply Stock Adjustment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+function showStockAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById('stockAlert');
+    if (alertBox) {
+        alertBox.className = isSuccess ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+        alertBox.textContent = msg;
+        alertBox.classList.remove('d-none');
+        setTimeout(() => alertBox.classList.add('d-none'), 3500);
+    }
+}
+
+function populateAdjustStockFields(btn) {
+    if (!btn || !btn.getAttribute('data-inv-id')) {
+        document.getElementById('catalogSelectContainer').classList.remove('d-none');
+        document.getElementById('adjInventoryId').value = '';
+        document.getElementById('adjInvCodeText').textContent = 'New Adjustment';
+        document.getElementById('adjCurrentQtyText').textContent = 'N/A';
+        document.getElementById('adjProductSkuText').textContent = 'N/A';
+        document.getElementById('adjWarehouseNameText').textContent = 'N/A';
+        return;
+    }
+
+    document.getElementById('catalogSelectContainer').classList.add('d-none');
+    const id = btn.getAttribute('data-inv-id');
+    const invCode = btn.getAttribute('data-inv-code');
+    const prodSku = btn.getAttribute('data-product-sku');
+    const whName = btn.getAttribute('data-warehouse-name');
+    const qtyHand = btn.getAttribute('data-qty-hand');
+
+    document.getElementById('adjInventoryId').value = id;
+    document.getElementById('adjInvCodeText').textContent = invCode || ('INV-' + id);
+    document.getElementById('adjProductSkuText').textContent = prodSku || 'SKU-LAP-001';
+    document.getElementById('adjWarehouseNameText').textContent = whName || 'Primary Eastern Logistics Hub';
+    document.getElementById('adjCurrentQtyText').textContent = qtyHand || '0';
+}
+
+function promptAdjustStock(btn) {
+    populateAdjustStockFields(btn);
+    const modalEl = document.getElementById('adjustStockModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+function submitStockAdjustment(e) {
+    e.preventDefault();
+    const inventoryId = document.getElementById('adjInventoryId').value;
+    const productId = document.getElementById('adjProductId').value;
+    const warehouseId = document.getElementById('adjWarehouseId').value;
+    const adjustmentType = document.getElementById('adjType').value;
+    const quantity = parseInt(document.getElementById('adjQuantity').value);
+    const reason = document.getElementById('adjReason').value;
+
+    const payload = {};
+    if (inventoryId) {
+        payload.inventoryId = parseInt(inventoryId);
+    } else {
+        payload.productId = parseInt(productId);
+        payload.warehouseId = parseInt(warehouseId);
+    }
+    payload.quantity = quantity;
+    payload.adjustmentType = adjustmentType;
+    payload.reason = reason;
+
+    fetch('/smartprocure/api/v1/inventory/adjust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to adjust stock level.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('adjustStockModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showStockAlert('Inventory stock level adjusted and persisted successfully!');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showStockAlert(data.message || 'Failed to adjust stock level.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('adjustStockModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showStockAlert(err.message || 'Failed to adjust stock level.', false);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const adjustStockModalEl = document.getElementById('adjustStockModal');
+    if (adjustStockModalEl) {
+        adjustStockModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) populateAdjustStockFields(event.relatedTarget);
+        });
+    }
+});
+</script>
+</th:block>
+</body>
+</html>

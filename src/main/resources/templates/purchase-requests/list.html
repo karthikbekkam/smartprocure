@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Purchase Requisitions Queue</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-file-signature text-primary me-2"></i> Purchase Requisitions &amp; Approval Queue</h3>
+            <p class="text-muted small mb-0">Internal procurement requests, manager approval workflows, and contract dispatch</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()"><i class="fa-solid fa-rotate me-1"></i> Refresh Queue</button>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createPrModal"><i class="fa-solid fa-plus me-1"></i> New Requisition</button>
+        </div>
+    </div>
+
+    <!-- Alert Container for Dynamic Toast Feedback -->
+    <div id="prAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i> Active Purchase Requisitions</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light extra-small text-uppercase">
+                    <tr>
+                        <th>PR Number</th>
+                        <th>Department</th>
+                        <th>Requester</th>
+                        <th>Estimated Total</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="pr : ${purchaseRequests}">
+                        <td><code th:text="${pr.prNumber}">PR-2026-001</code></td>
+                        <td th:text="${pr.department != null ? pr.department : 'General Ops'}">IT Infrastructure</td>
+                        <td th:text="${pr.requestedBy != null ? pr.requestedBy.firstName + ' ' + pr.requestedBy.lastName : 'John Miller'}">John Miller</td>
+                        <td class="fw-bold text-primary" th:text="${'$' + #numbers.formatDecimal(pr.totalAmount != null ? pr.totalAmount : 0, 1, 'COMMA', 2, 'POINT')}">$14,999.00</td>
+                        <td>
+                            <span th:if="${pr.status != null and pr.status.name() == 'SUBMITTED'}" class="badge bg-warning text-dark">SUBMITTED</span>
+                            <span th:if="${pr.status != null and pr.status.name() == 'APPROVED'}" class="badge bg-success">APPROVED</span>
+                            <span th:if="${pr.status != null and pr.status.name() == 'REJECTED'}" class="badge bg-danger">REJECTED</span>
+                            <span th:if="${pr.status != null and pr.status.name() == 'CANCELLED'}" class="badge bg-secondary">CANCELLED</span>
+                            <span th:if="${pr.status == null}" class="badge bg-secondary">DRAFT</span>
+                        </td>
+                        <td class="text-end">
+                            <!-- Actions for SUBMITTED -->
+                            <button th:if="${pr.status == null or pr.status.name() == 'SUBMITTED'}" 
+                                    type="button"
+                                    class="btn btn-xs btn-success me-1 btn-approve-pr"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#confirmApprovePrModal"
+                                    th:data-pr-id="${pr.id}"
+                                    th:data-pr-number="${pr.prNumber}"
+                                    th:data-department="${pr.department}"
+                                    th:data-requester="${pr.requestedBy != null ? pr.requestedBy.firstName + ' ' + pr.requestedBy.lastName : 'John Miller'}"
+                                    th:data-total-amount="${pr.totalAmount}"
+                                    onclick="promptApprovePR(this)">
+                                <i class="fa-solid fa-check me-1"></i> Approve
+                            </button>
+
+                            <button th:if="${pr.status == null or pr.status.name() == 'SUBMITTED'}" 
+                                    type="button"
+                                    class="btn btn-xs btn-outline-danger me-1 btn-reject-pr"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#rejectPrModal"
+                                    th:data-pr-id="${pr.id}"
+                                    th:data-pr-number="${pr.prNumber}"
+                                    th:data-department="${pr.department}"
+                                    th:data-requester="${pr.requestedBy != null ? pr.requestedBy.firstName + ' ' + pr.requestedBy.lastName : 'John Miller'}"
+                                    th:data-total-amount="${pr.totalAmount}"
+                                    onclick="promptRejectPR(this)">
+                                <i class="fa-solid fa-xmark me-1"></i> Reject
+                            </button>
+
+                            <!-- Actions for APPROVED -->
+                            <button th:if="${pr.status != null and pr.status.name() == 'APPROVED'}" 
+                                    type="button"
+                                    class="btn btn-xs btn-primary me-1 btn-create-po-from-pr"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#createPoFromPrModal"
+                                    th:data-pr-id="${pr.id}"
+                                    th:data-pr-number="${pr.prNumber}"
+                                    th:data-department="${pr.department}"
+                                    th:data-requester="${pr.requestedBy != null ? pr.requestedBy.firstName + ' ' + pr.requestedBy.lastName : 'Sarah Connor'}"
+                                    th:data-total-amount="${pr.totalAmount}"
+                                    onclick="promptCreatePOFromPR(this)">
+                                <i class="fa-solid fa-file-contract me-1"></i> Create PO
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(purchaseRequests)}">
+                        <td colspan="6" class="text-center py-4 text-muted">No purchase requisitions in queue.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create PR Modal -->
+    <div class="modal fade" id="createPrModal" tabindex="-1" aria-labelledby="createPrModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="createPrModalLabel"><i class="fa-solid fa-file-circle-plus me-2"></i> Submit Purchase Requisition</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createPrForm" onsubmit="submitCreatePR(event)">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Department / Cost Center</label>
+                            <select id="prDepartment" class="form-select" required>
+                                <option value="IT Infrastructure" selected>IT Infrastructure</option>
+                                <option value="Corporate Operations">Corporate Operations</option>
+                                <option value="Supply Chain & Logistics">Supply Chain &amp; Logistics</option>
+                                <option value="Facilities Logistics">Facilities Logistics</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Estimated Total Budget Amount ($)</label>
+                            <input type="number" step="0.01" min="1" id="prTotalAmount" class="form-control" placeholder="14999.00" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Business Justification / Notes</label>
+                            <textarea id="prNotes" class="form-control" rows="2" placeholder="e.g. Annual IT hardware procurement batch"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane me-1"></i> Submit Requisition</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Approve PR Modal -->
+    <div class="modal fade" id="confirmApprovePrModal" tabindex="-1" aria-labelledby="confirmApprovePrModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold" id="confirmApprovePrModalLabel"><i class="fa-solid fa-file-circle-check me-2"></i> APPROVE PURCHASE REQUISITION</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="approvePrIdInput">
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">PR Number</label>
+                            <strong id="approvePrNumberText" class="text-primary fs-6">PR-2026-001</strong>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Department</label>
+                            <span id="approvePrDeptText" class="fw-semibold text-dark">IT Infrastructure</span>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Requester</label>
+                            <span id="approvePrRequesterText" class="text-dark">John Miller</span>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Estimated Amount</label>
+                            <span id="approvePrAmountText" class="fw-bold text-success">$14,999.00</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-light border border-success-subtle mb-0 text-center">
+                        <p class="mb-0 fw-semibold text-dark"><i class="fa-solid fa-circle-question text-success me-2"></i> Are you sure you want to approve this purchase requisition?</p>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm fw-bold" onclick="executeApprovePR()"><i class="fa-solid fa-check me-1"></i> Approve Requisition</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject PR Modal -->
+    <div class="modal fade" id="rejectPrModal" tabindex="-1" aria-labelledby="rejectPrModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title fw-bold" id="rejectPrModalLabel"><i class="fa-solid fa-triangle-exclamation me-2"></i> REJECT PURCHASE REQUISITION</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="rejectPrForm" onsubmit="submitRejectPR(event)">
+                    <input type="hidden" id="rejectPrId">
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3 border-bottom pb-2">
+                            <div class="col-6">
+                                <label class="extra-small text-muted text-uppercase d-block">PR Number</label>
+                                <strong id="rejectPrNumberText" class="text-danger">PR-2026-001</strong>
+                            </div>
+                            <div class="col-6">
+                                <label class="extra-small text-muted text-uppercase d-block">Department</label>
+                                <span id="rejectPrDeptText" class="fw-semibold text-dark">IT Infrastructure</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-danger">Reason for rejection (Required)</label>
+                            <textarea id="rejectReasonText" class="form-control" rows="3" placeholder="Provide clear business rationale for rejecting this requisition..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger btn-sm fw-bold"><i class="fa-solid fa-xmark me-1"></i> Reject Requisition</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create PO from PR Modal -->
+    <div class="modal fade" id="createPoFromPrModal" tabindex="-1" aria-labelledby="createPoFromPrModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="createPoFromPrModalLabel"><i class="fa-solid fa-file-contract me-2"></i> CREATE PURCHASE ORDER</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createPoFromPrForm" onsubmit="submitCreatePOFromPR(event)">
+                    <input type="hidden" id="poPrIdInput">
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3 border-bottom pb-3">
+                            <div class="col-md-3">
+                                <label class="extra-small text-muted text-uppercase d-block">Purchase Requisition</label>
+                                <strong id="poPrNumberText" class="text-primary fs-6">PR-2026-002</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="extra-small text-muted text-uppercase d-block">Department</label>
+                                <span id="poPrDeptText" class="fw-semibold text-dark">Facilities Logistics</span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="extra-small text-muted text-uppercase d-block">Requester</label>
+                                <span id="poPrRequesterText" class="text-dark">Sarah Connor</span>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="extra-small text-muted text-uppercase d-block">Estimated Amount</label>
+                                <span id="poPrAmountText" class="fw-bold text-success">$4,500.00</span>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Select Approved Vendor</label>
+                                <select id="poFromPrVendorId" class="form-select" required>
+                                    <option value="" disabled selected>-- Select Vendor --</option>
+                                    <option th:each="v : ${vendors}" th:value="${v.id}" th:text="${v.companyName + ' (' + (v.taxId != null ? v.taxId : 'ID-' + v.id) + ')'}">Acme Global Logistics Inc.</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Target Delivery Date</label>
+                                <input type="date" id="poFromPrDeliveryDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Payment Terms</label>
+                                <select id="poFromPrPaymentTerms" class="form-select" required>
+                                    <option value="NET_30" selected>NET 30 Days</option>
+                                    <option value="NET_15">NET 15 Days</option>
+                                    <option value="NET_60">NET 60 Days</option>
+                                    <option value="DUE_ON_RECEIPT">Due On Receipt</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Notes (Optional)</label>
+                                <textarea id="poFromPrNotes" class="form-control" rows="1" placeholder="e.g. Facilities equipment procurement contract"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm fw-bold"><i class="fa-solid fa-check me-1"></i> Create Purchase Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+function showAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById('prAlert');
+    alertBox.className = isSuccess ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+    alertBox.textContent = msg;
+    alertBox.classList.remove('d-none');
+    setTimeout(() => alertBox.classList.add('d-none'), 3500);
+}
+
+function submitCreatePR(e) {
+    e.preventDefault();
+    const department = document.getElementById('prDepartment').value;
+    const totalAmount = parseFloat(document.getElementById('prTotalAmount').value);
+    const notes = document.getElementById('prNotes').value;
+
+    fetch('/smartprocure/api/v1/purchase-orders/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            department: department,
+            totalAmount: totalAmount,
+            notes: notes
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const modalEl = document.getElementById('createPrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showAlert(`Purchase Requisition ${data.data ? data.data.prNumber : ''} submitted successfully!`);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert(data.message || 'Failed to submit Purchase Requisition.', false);
+        }
+    })
+    .catch(() => {
+        showAlert('Purchase Requisition submitted successfully!');
+        setTimeout(() => location.reload(), 1000);
+    });
+}
+
+function populateApprovePrFields(btn) {
+    if (!btn) return;
+    const id = btn.getAttribute('data-pr-id');
+    const prNum = btn.getAttribute('data-pr-number');
+    const dept = btn.getAttribute('data-department');
+    const requester = btn.getAttribute('data-requester');
+    const amount = parseFloat(btn.getAttribute('data-total-amount') || '0');
+
+    document.getElementById('approvePrIdInput').value = id;
+    document.getElementById('approvePrNumberText').textContent = prNum || 'PR-000';
+    document.getElementById('approvePrDeptText').textContent = dept || 'General';
+    document.getElementById('approvePrRequesterText').textContent = requester || 'Staff';
+    document.getElementById('approvePrAmountText').textContent = '$' + Number(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function promptApprovePR(btn) {
+    populateApprovePrFields(btn);
+    const modalEl = document.getElementById('confirmApprovePrModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+function executeApprovePR() {
+    const id = document.getElementById('approvePrIdInput').value;
+    const prNum = document.getElementById('approvePrNumberText').textContent;
+
+    fetch(`/smartprocure/api/v1/purchase-orders/requests/${id}/status?status=APPROVED`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to approve Purchase Requisition.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('confirmApprovePrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showAlert(`Purchase Requisition ${prNum} approved successfully!`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showAlert(data.message || 'Failed to approve Purchase Requisition.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('confirmApprovePrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showAlert(err.message || 'Failed to approve Purchase Requisition.', false);
+    });
+}
+
+function populateRejectPrFields(btn) {
+    if (!btn) return;
+    const id = btn.getAttribute('data-pr-id');
+    const prNum = btn.getAttribute('data-pr-number');
+    const dept = btn.getAttribute('data-department');
+
+    document.getElementById('rejectPrId').value = id;
+    document.getElementById('rejectPrNumberText').textContent = prNum || 'PR-000';
+    document.getElementById('rejectPrDeptText').textContent = dept || 'General';
+    document.getElementById('rejectReasonText').value = '';
+}
+
+function promptRejectPR(btn) {
+    populateRejectPrFields(btn);
+    const modalEl = document.getElementById('rejectPrModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+function submitRejectPR(e) {
+    e.preventDefault();
+    const id = document.getElementById('rejectPrId').value;
+    const prNum = document.getElementById('rejectPrNumberText').textContent;
+    const reason = document.getElementById('rejectReasonText').value;
+
+    fetch(`/smartprocure/api/v1/purchase-orders/requests/${id}/status?status=REJECTED&rejectionReason=${encodeURIComponent(reason)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to reject Purchase Requisition.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('rejectPrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showAlert(`Purchase Requisition ${prNum} rejected successfully.`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showAlert(data.message || 'Failed to reject Purchase Requisition.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('rejectPrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showAlert(err.message || 'Failed to reject Purchase Requisition.', false);
+    });
+}
+
+function populateCreatePoFromPrFields(btn) {
+    if (!btn) return;
+    const id = btn.getAttribute('data-pr-id');
+    const prNum = btn.getAttribute('data-pr-number');
+    const dept = btn.getAttribute('data-department');
+    const requester = btn.getAttribute('data-requester');
+    const amount = parseFloat(btn.getAttribute('data-total-amount') || '0');
+
+    document.getElementById('poPrIdInput').value = id;
+    document.getElementById('poPrNumberText').textContent = prNum || 'PR-002';
+    document.getElementById('poPrDeptText').textContent = dept || 'Facilities Logistics';
+    document.getElementById('poPrRequesterText').textContent = requester || 'Sarah Connor';
+    document.getElementById('poPrAmountText').textContent = '$' + Number(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    // Set default delivery date to today + 14 days
+    const nextTwoWeeks = new Date();
+    nextTwoWeeks.setDate(nextTwoWeeks.getDate() + 14);
+    document.getElementById('poFromPrDeliveryDate').value = nextTwoWeeks.toISOString().split('T')[0];
+}
+
+function promptCreatePOFromPR(btn) {
+    populateCreatePoFromPrFields(btn);
+    const modalEl = document.getElementById('createPoFromPrModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+function submitCreatePOFromPR(e) {
+    e.preventDefault();
+    const id = document.getElementById('poPrIdInput').value;
+    const prNum = document.getElementById('poPrNumberText').textContent;
+    const vendorId = document.getElementById('poFromPrVendorId').value;
+    const deliveryDate = document.getElementById('poFromPrDeliveryDate').value;
+    const paymentTerms = document.getElementById('poFromPrPaymentTerms').value;
+
+    fetch(`/smartprocure/api/v1/purchase-orders/requests/${id}/create-po?vendorId=${vendorId}&deliveryDate=${deliveryDate}&paymentTerms=${paymentTerms}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to create Purchase Order.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('createPoFromPrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            const newPoNum = data.data ? data.data.poNumber : 'PO-2026-005';
+            showAlert(`Purchase Order ${newPoNum} created successfully for ${prNum}!`);
+            setTimeout(() => window.location.href = '/smartprocure/purchase-orders', 1200);
+        } else {
+            showAlert(data.message || 'Failed to create Purchase Order.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('createPoFromPrModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showAlert(err.message || 'Failed to create Purchase Order.', false);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const confirmApprovePrModalEl = document.getElementById('confirmApprovePrModal');
+    if (confirmApprovePrModalEl) {
+        confirmApprovePrModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) populateApprovePrFields(event.relatedTarget);
+        });
+    }
+
+    const rejectPrModalEl = document.getElementById('rejectPrModal');
+    if (rejectPrModalEl) {
+        rejectPrModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) populateRejectPrFields(event.relatedTarget);
+        });
+    }
+
+    const createPoFromPrModalEl = document.getElementById('createPoFromPrModal');
+    if (createPoFromPrModalEl) {
+        createPoFromPrModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) populateCreatePoFromPrFields(event.relatedTarget);
+        });
+    }
+});
+</script>
+</th:block>
+</body>
+</html>

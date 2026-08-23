@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header('Purchase Orders - SmartProcure')}"></head>
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Official Purchase Orders</h3>
+                <p class="text-muted small mb-0">Legal procurement contracts, vendor dispatches, and fulfillment tracking</p>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPoModal">
+                <i class="bi bi-plus-lg me-1"></i> Issue Purchase Order
+            </button>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Vendor Supplier</th>
+                                <th>Target Delivery Date</th>
+                                <th>Total Contract Value</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">Loading purchase orders...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issue PO Modal -->
+    <div class="modal fade" id="newPoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Issue Purchase Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="poForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Vendor ID</label>
+                            <input type="number" id="poVendorId" class="form-control" value="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Product ID</label>
+                            <input type="number" id="poProductId" class="form-control" value="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Order Quantity</label>
+                            <input type="number" id="poQuantity" class="form-control" value="10" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Contract Unit Price ($)</label>
+                            <input type="number" step="0.01" id="poUnitPrice" class="form-control" value="1499.99" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitPoForm()">Issue Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/static/js/app.js}"></script>
+    <script th:src="@{/static/js/po.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

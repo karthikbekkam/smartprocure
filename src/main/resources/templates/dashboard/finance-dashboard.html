@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Finance Manager Dashboard</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-extrabold mb-1"><i class="fa-solid fa-file-invoice-dollar text-success me-2"></i> Financial Operations & 3-Way Matching</h3>
+            <p class="text-muted small mb-0">Invoice matching settlement, payment scheduling, and ledger reconciliations</p>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card p-3 bg-white rounded-3 shadow-sm border">
+                <span class="text-muted extra-small fw-bold text-uppercase">Total YTD Spend</span>
+                <h3 class="fw-bold my-1 text-success" th:text="${'$' + #numbers.formatDecimal(metrics.totalSpend, 1, 'COMMA', 2, 'POINT')}">$0.00</h3>
+                <span class="badge bg-success extra-small"><i class="fa-solid fa-chart-line me-1"></i> Settled</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card p-3 bg-white rounded-3 shadow-sm border">
+                <span class="text-muted extra-small fw-bold text-uppercase">Pending Invoices</span>
+                <h3 class="fw-bold my-1 text-warning">4</h3>
+                <span class="badge bg-warning text-dark extra-small"><i class="fa-solid fa-clock me-1"></i> Needs 3-Way Match</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card p-3 bg-white rounded-3 shadow-sm border">
+                <span class="text-muted extra-small fw-bold text-uppercase">Active PO Contracts</span>
+                <h3 class="fw-bold my-1 text-primary" th:text="${metrics.openPurchaseOrders}">5</h3>
+                <span class="badge bg-primary extra-small">Committed</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card p-3 bg-white rounded-3 shadow-sm border">
+                <span class="text-muted extra-small fw-bold text-uppercase">Qualified Vendors</span>
+                <h3 class="fw-bold my-1 text-dark" th:text="${metrics.totalVendors}">12</h3>
+                <span class="text-muted extra-small">Approved Payable Entities</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Reconciliation Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-receipt text-success me-2"></i> Invoices Awaiting 3-Way Settlement</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light extra-small text-uppercase">
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>PO Ref</th>
+                        <th>Vendor Supplier</th>
+                        <th>Total Amount</th>
+                        <th>3-Way Match</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>INV-2026-901</code></td>
+                        <td><code>PO-2026-004</code></td>
+                        <td>Acme Global Logistics</td>
+                        <td class="fw-bold text-success">$14,999.90</td>
+                        <td><span class="badge bg-success"><i class="fa-solid fa-check-double me-1"></i> VERIFIED</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-xs btn-success"><i class="fa-solid fa-money-check-dollar"></i> Process Payment</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

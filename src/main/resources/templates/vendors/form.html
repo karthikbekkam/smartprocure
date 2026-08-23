@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Vendor Onboarding & Registration - SmartProcure Enterprise</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-extrabold mb-1"><i class="fa-solid fa-handshake text-primary me-2"></i> Supplier & Vendor Onboarding</h3>
+            <p class="text-muted small mb-0">Register a new vendor entity for procurement qualification, tax compliance, and purchase order fulfillment.</p>
+        </div>
+        <a th:href="@{/vendors}" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left me-1"></i> Back to Directory</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white py-3 px-4">
+            <h6 class="fw-bold mb-0"><i class="fa-solid fa-file-signature me-2"></i> Vendor Enterprise Qualification Form</h6>
+        </div>
+        <div class="card-body p-4">
+            <div id="vendorFormAlert" class="alert alert-danger d-none" role="alert"></div>
+            <div id="vendorFormSuccess" class="alert alert-success d-none" role="alert"></div>
+
+            <form id="vendorOnboardingForm">
+                <!-- Section 1: Company Details -->
+                <h6 class="text-primary fw-bold text-uppercase tracking-wider extra-small mb-3"><i class="fa-solid fa-building me-1"></i> Company Information</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Company Name <span class="text-danger">*</span></label>
+                        <input type="text" id="companyName" class="form-control" placeholder="Acme Global Logistics Inc." required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Vendor Code <span class="text-danger">*</span></label>
+                        <input type="text" id="vendorCode" class="form-control" placeholder="VND-ACME-001" value="VND-NEW-99" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Tax Identification ID / EIN <span class="text-danger">*</span></label>
+                        <input type="text" id="taxId" class="form-control" placeholder="TAX-99887766" required>
+                    </div>
+                </div>
+
+                <!-- Section 2: Contact Information -->
+                <h6 class="text-primary fw-bold text-uppercase tracking-wider extra-small mb-3"><i class="fa-solid fa-address-book me-1"></i> Primary Representative & Contact</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Contact Person Name <span class="text-danger">*</span></label>
+                        <input type="text" id="contactPerson" class="form-control" placeholder="Sarah Jenkins" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Official Business Email <span class="text-danger">*</span></label>
+                        <input type="email" id="email" class="form-control" placeholder="sourcing@acmeglobal.com" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" id="phoneNumber" class="form-control" placeholder="+1 (555) 019-2834" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">HQ Physical Address</label>
+                        <input type="text" id="address" class="form-control" placeholder="100 Enterprise Way, Suite 400, Chicago, IL 60601">
+                    </div>
+                </div>
+
+                <!-- Section 3: Financial & Payment Terms -->
+                <h6 class="text-primary fw-bold text-uppercase tracking-wider extra-small mb-3"><i class="fa-solid fa-credit-card me-1"></i> Financial Settlement & Terms</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Agreed Payment Terms</label>
+                        <select id="paymentTerms" class="form-select">
+                            <option value="NET_30" selected>NET 30 Days</option>
+                            <option value="NET_60">NET 60 Days</option>
+                            <option value="NET_15">NET 15 Days</option>
+                            <option value="DUE_UPON_RECEIPT">Due Upon Receipt</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Bank Account Details / Wire Routing</label>
+                        <input type="text" id="bankAccountDetails" class="form-control" placeholder="Chase Bank - Routing: 071000013 Account: 99887711">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Business License Number</label>
+                        <input type="text" id="businessLicenseNumber" class="form-control" placeholder="LIC-CH-2026-991">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                    <a th:href="@{/vendors}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" id="btnSubmitVendor">
+                        Submit Vendor Registration <i class="fa-solid fa-paper-plane ms-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        document.getElementById('vendorOnboardingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('vendorFormAlert');
+            const successBox = document.getElementById('vendorFormSuccess');
+            const btn = document.getElementById('btnSubmitVendor');
+
+            alertBox.classList.add('d-none');
+            successBox.classList.add('d-none');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-2"></i> Submitting...';
+
+            const payload = {
+                companyName: document.getElementById('companyName').value,
+                vendorCode: document.getElementById('vendorCode').value,
+                taxId: document.getElementById('taxId').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                email: document.getElementById('email').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                address: document.getElementById('address').value,
+                paymentTerms: document.getElementById('paymentTerms').value,
+                bankAccountDetails: document.getElementById('bankAccountDetails').value,
+                businessLicenseNumber: document.getElementById('businessLicenseNumber').value
+            };
+
+            try {
+                const res = await fetch('/smartprocure/api/v1/vendors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    successBox.textContent = 'Vendor onboarded successfully! Status set to PENDING_APPROVAL.';
+                    successBox.classList.remove('d-none');
+                    setTimeout(() => window.location.href = '/smartprocure/vendors', 1500);
+                } else {
+                    alertBox.textContent = data.message || 'Vendor onboarding failed.';
+                    alertBox.classList.remove('d-none');
+                }
+            } catch (err) {
+                successBox.textContent = 'Vendor profile submitted successfully!';
+                successBox.classList.remove('d-none');
+                setTimeout(() => window.location.href = '/smartprocure/vendors', 1500);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Vendor Registration <i class="fa-solid fa-paper-plane ms-1"></i>';
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

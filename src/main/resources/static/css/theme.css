@@ -1,0 +1,731 @@
+/* =========================================================
+   SmartProcure Enterprise
+   Premium Global Theme
+   ========================================================= */
+
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --secondary-color: #06b6d4;
+    --accent-color: #8b5cf6;
+
+    --background-main: #f8fafc;
+    --card-bg: #ffffff;
+
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+
+    --border-color: #e2e8f0;
+
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #94a3b8;
+    --sidebar-hover: #1e293b;
+    --sidebar-active: #4f46e5;
+
+    --success-color: #16a34a;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --info-color: #0891b2;
+
+    --shadow-sm:
+            0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+    --shadow-md:
+            0 4px 6px -1px rgb(0 0 0 / 0.10),
+            0 2px 4px -2px rgb(0 0 0 / 0.10);
+
+    --shadow-lg:
+            0 10px 15px -3px rgb(0 0 0 / 0.10),
+            0 4px 6px -4px rgb(0 0 0 / 0.10);
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* Compatibility variables */
+    --sp-primary: #4f46e5;
+    --sp-primary-hover: #4338ca;
+    --sp-secondary: #06b6d4;
+    --sp-accent: #8b5cf6;
+    --sp-background: #f8fafc;
+    --sp-surface: #ffffff;
+    --sp-text-primary: #0f172a;
+    --sp-text-secondary: #64748b;
+    --sp-border: #e2e8f0;
+    --sp-card-shadow: 0 4px 12px rgb(15 23 42 / 0.06);
+    --sp-gradient-primary: linear-gradient(
+            135deg,
+            #4f46e5 0%,
+            #7c3aed 100%
+    );
+}
+
+
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
+[data-theme="dark"] {
+    --background-main: #0b0f19;
+    --card-bg: #1e293b;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    --border-color: #334155;
+
+    --sidebar-bg: #020617;
+    --sidebar-hover: #0f172a;
+
+    --sp-background: #0b0f19;
+    --sp-surface: #1e293b;
+    --sp-text-primary: #f8fafc;
+    --sp-text-secondary: #94a3b8;
+    --sp-border: #334155;
+}
+
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+
+    font-family:
+            'Inter',
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
+    background-color: var(--background-main);
+    color: var(--text-primary);
+
+    min-height: 100vh;
+
+    transition:
+            background-color 0.3s ease,
+            color 0.3s ease;
+
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a {
+    transition:
+            color 0.2s ease,
+            background-color 0.2s ease;
+}
+
+
+/* =========================================================
+   APPLICATION LAYOUT
+   ========================================================= */
+
+.app-main {
+    margin-left: 260px;
+    min-height: 100vh;
+
+    padding: 0 2rem 2rem;
+
+    background: var(--background-main);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.app-sidebar {
+    width: 260px;
+    height: 100vh;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+
+    z-index: 1000;
+
+    display: flex;
+    flex-direction: column;
+
+    transition:
+            width 0.3s ease,
+            transform 0.3s ease;
+}
+
+
+/* =========================================================
+   CUSTOM NAVIGATION
+   ========================================================= */
+
+.nav-link-custom {
+    display: flex;
+    align-items: center;
+
+    padding: 0.75rem 1.25rem;
+
+    color: var(--sidebar-text);
+
+    text-decoration: none;
+
+    border-radius: var(--radius-md);
+
+    margin: 0.25rem 0.75rem;
+
+    font-weight: 500;
+
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease;
+}
+
+.nav-link-custom i {
+    width: 24px;
+    margin-right: 0.75rem;
+    text-align: center;
+}
+
+.nav-link-custom:hover {
+    background-color: var(--sidebar-hover);
+    color: #ffffff;
+
+    transform: translateX(2px);
+}
+
+.nav-link-custom.active {
+    background: var(--sp-gradient-primary);
+    color: #ffffff;
+
+    box-shadow:
+            0 4px 12px rgb(79 70 229 / 0.35);
+}
+
+
+/* =========================================================
+   GLASS / PREMIUM CARDS
+   ========================================================= */
+
+.glass-card {
+    background: var(--card-bg);
+
+    border: 1px solid var(--border-color);
+
+    border-radius: var(--radius-xl);
+
+    box-shadow: var(--shadow-md);
+
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+
+/* =========================================================
+   STAT / KPI CARDS
+   ========================================================= */
+
+.stat-card {
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 1.5rem;
+
+    border-radius: var(--radius-lg);
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border-color);
+
+    box-shadow: var(--shadow-sm);
+
+    transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 3px;
+
+    background: var(--sp-gradient-primary);
+
+    opacity: 0;
+
+    transition: opacity 0.25s ease;
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+
+.stat-icon-bg {
+    width: 3.5rem;
+    height: 3.5rem;
+
+    border-radius: var(--radius-md);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+}
+
+
+/* =========================================================
+   KPI CARDS
+   ========================================================= */
+
+.kpi-card {
+    position: relative;
+
+    overflow: hidden;
+
+    border: none;
+
+    border-radius: 1.25rem;
+
+    transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+            0 15px 30px rgb(0 0 0 / 0.12);
+}
+
+.kpi-icon-wrapper {
+    width: 54px;
+    height: 54px;
+
+    border-radius: 1rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 1.5rem;
+
+    background: rgb(255 255 255 / 0.2);
+
+    backdrop-filter: blur(8px);
+}
+
+.kpi-trend {
+    font-size: 0.85rem;
+
+    font-weight: 600;
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 0.25rem;
+
+    padding: 0.25rem 0.5rem;
+
+    border-radius: 6px;
+
+    background: rgb(255 255 255 / 0.2);
+}
+
+
+/* =========================================================
+   CHARTS
+   ========================================================= */
+
+.chart-card-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding-bottom: 1rem;
+
+    border-bottom: 1px solid var(--border-color);
+
+    margin-bottom: 1rem;
+}
+
+.chart-container {
+    position: relative;
+
+    width: 100%;
+
+    min-height: 280px;
+}
+
+
+/* =========================================================
+   QUICK ACTION BUTTONS
+   ========================================================= */
+
+.quick-action-btn {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 1.25rem 1rem;
+
+    border-radius: 1rem;
+
+    background: var(--card-bg);
+
+    border: 1px solid var(--border-color);
+
+    color: var(--text-primary);
+
+    text-decoration: none;
+
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.quick-action-btn:hover {
+    background: var(--sp-gradient-primary);
+
+    color: #ffffff;
+
+    border-color: transparent;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+            0 8px 20px rgb(79 70 229 / 0.3);
+}
+
+.quick-action-btn i {
+    font-size: 1.75rem;
+
+    margin-bottom: 0.5rem;
+}
+
+
+/* =========================================================
+   ACTIVITY FEED
+   ========================================================= */
+
+.activity-feed-item {
+    position: relative;
+
+    padding-left: 1.75rem;
+
+    padding-bottom: 1.25rem;
+
+    border-left: 2px solid var(--border-color);
+}
+
+.activity-feed-item:last-child {
+    padding-bottom: 0;
+
+    border-left-color: transparent;
+}
+
+.activity-dot {
+    position: absolute;
+
+    left: -7px;
+
+    top: 2px;
+
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+
+    background: var(--primary-color);
+
+    border: 2px solid var(--card-bg);
+}
+
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+.table-glass {
+    width: 100%;
+
+    border-collapse: separate;
+
+    border-spacing: 0 0.5rem;
+}
+
+.table-glass tbody tr {
+    background: var(--card-bg);
+
+    border-radius: 0.75rem;
+
+    box-shadow: var(--sp-card-shadow);
+
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.table-glass tbody tr:hover {
+    transform: scale(1.005);
+
+    box-shadow: var(--shadow-md);
+}
+
+.table-glass td,
+.table-glass th {
+    padding: 1rem 1.25rem;
+
+    vertical-align: middle;
+
+    border: none;
+}
+
+.table-glass th {
+    color: var(--text-secondary);
+
+    font-weight: 600;
+
+    font-size: 0.85rem;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.05em;
+}
+
+
+/* =========================================================
+   ENTERPRISE BADGES
+   ========================================================= */
+
+.badge-pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.badge-approved {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.badge-rejected {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.btn-primary {
+    background-color: var(--primary-color);
+
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--primary-hover);
+
+    border-color: var(--primary-hover);
+}
+
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+.form-control,
+.form-select {
+    border-color: var(--border-color);
+
+    border-radius: var(--radius-md);
+
+    min-height: 44px;
+
+    color: var(--text-primary);
+
+    background-color: var(--card-bg);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+
+    box-shadow:
+            0 0 0 0.2rem rgb(79 70 229 / 0.15);
+}
+
+
+/* =========================================================
+   RESPONSIVE DESIGN
+   ========================================================= */
+
+@media (max-width: 992px) {
+
+    .app-sidebar {
+        width: 220px;
+    }
+
+    .app-main {
+        margin-left: 220px;
+
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+    .app-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .app-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .app-main {
+        margin-left: 0;
+
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+
+    .chart-card-header {
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 0.75rem;
+    }
+}
+
+
+@media (max-width: 576px) {
+
+    .app-main {
+        padding: 0 0.75rem 1rem;
+    }
+
+    .stat-card {
+        padding: 1.1rem;
+    }
+
+    .kpi-icon-wrapper {
+        width: 46px;
+        height: 46px;
+
+        font-size: 1.25rem;
+    }
+
+    .table-responsive {
+        border-radius: var(--radius-lg);
+    }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgb(79 70 229 / 0.35);
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-main);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Footer Link Hover Utilities */
+.hover-primary {
+    transition: color 0.2s ease-in-out;
+}
+.hover-primary:hover {
+    color: #38bdf8 !important;
+}
+.hover-white {
+    transition: color 0.2s ease-in-out;
+}
+.hover-white:hover {
+    color: #ffffff !important;
+}

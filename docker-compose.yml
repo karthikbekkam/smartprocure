@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: smartprocure-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: smartprocure_db
+      MYSQL_USER: smartprocure_user
+      MYSQL_PASSWORD: smartprocure_pass
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartprocure-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: mysqldb
+      DB_PORT: 3306
+      DB_NAME: smartprocure_db
+      DB_USERNAME: smartprocure_user
+      DB_PASSWORD: smartprocure_pass
+    depends_on:
+      mysqldb:
+        condition: service_healthy

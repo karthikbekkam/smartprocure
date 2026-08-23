@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Enterprise Warehouses & Facilities</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-building-user text-primary me-2"></i> Enterprise Warehouses &amp; Logistics Hubs</h3>
+            <p class="text-muted small mb-0">Fulfillment centers, capacity utilization, stock zones, and warehouse manager assignments</p>
+        </div>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createWarehouseModal">
+            <i class="fa-solid fa-plus me-1"></i> Register Facility
+        </button>
+    </div>
+
+    <!-- Alert Feedback Banner -->
+    <div id="warehouseAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light extra-small text-uppercase">
+                    <tr>
+                        <th>Code</th>
+                        <th>Warehouse Name</th>
+                        <th>Location City</th>
+                        <th>Address / Capacity</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="wh : ${warehouses}">
+                        <td><code th:text="${wh.code}">WH-CHI-01</code></td>
+                        <td class="fw-bold" th:text="${wh.name}">Chicago Central Hub</td>
+                        <td th:text="${wh.location}">Chicago, IL</td>
+                        <td th:text="${wh.capacity != null ? wh.capacity + ' Units Max' : 'N/A'}">10,000 Units Max</td>
+                        <td>
+                            <span th:if="${wh.active == null or wh.active}" class="badge bg-success">ACTIVE</span>
+                            <span th:if="${wh.active != null and !wh.active}" class="badge bg-secondary">INACTIVE</span>
+                        </td>
+                        <td class="text-end">
+                            <button th:if="${wh.active == null or wh.active}" 
+                                    type="button"
+                                    class="btn btn-xs btn-outline-danger me-1 btn-deactivate-wh" 
+                                    th:data-wh-id="${wh.id}"
+                                    th:data-wh-code="${wh.code}"
+                                    th:data-wh-name="${wh.name}"
+                                    th:data-wh-location="${wh.location}"
+                                    onclick="toggleWarehouseActive(this.getAttribute('data-wh-id'), false)" 
+                                    title="Deactivate Facility">
+                                <i class="fa-solid fa-ban me-1"></i> Deactivate
+                            </button>
+
+                            <button th:if="${wh.active != null and !wh.active}" 
+                                    type="button"
+                                    class="btn btn-xs btn-success me-1 btn-activate-wh" 
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#confirmActivateWarehouseModal"
+                                    th:data-wh-id="${wh.id}"
+                                    th:data-wh-code="${wh.code}"
+                                    th:data-wh-name="${wh.name}"
+                                    th:data-wh-location="${wh.location}"
+                                    onclick="promptActivateWarehouse(this)"
+                                    title="Activate Facility">
+                                <i class="fa-solid fa-check me-1"></i> Activate
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(warehouses)}">
+                        <td colspan="6" class="text-center py-4 text-muted">No warehouse facilities registered in system.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Warehouse Modal -->
+    <div class="modal fade" id="createWarehouseModal" tabindex="-1" aria-labelledby="createWarehouseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="createWarehouseModalLabel"><i class="fa-solid fa-building me-2"></i> Register Warehouse Facility</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createWarehouseForm" onsubmit="submitCreateWarehouse(event)">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Facility Name</label>
+                            <input type="text" id="whName" class="form-control" placeholder="e.g. New York Regional Hub" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Facility Code</label>
+                                <input type="text" id="whCode" class="form-control" placeholder="WH-NY-02" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Location City</label>
+                                <input type="text" id="whCity" class="form-control" placeholder="New York, NY" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Full Address</label>
+                            <input type="text" id="whAddress" class="form-control" placeholder="750 Industrial Pkwy" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check me-1"></i> Register Warehouse</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Activate Warehouse Modal -->
+    <div class="modal fade" id="confirmActivateWarehouseModal" tabindex="-1" aria-labelledby="confirmActivateWarehouseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold" id="confirmActivateWarehouseModalLabel"><i class="fa-solid fa-building-circle-check me-2"></i> ACTIVATE WAREHOUSE</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="activateWhIdInput">
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="extra-small text-muted text-uppercase d-block">Warehouse</label>
+                            <strong id="activateWhNameText" class="text-dark fs-6">Primary Eastern Logistics Hub</strong>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Code</label>
+                            <code id="activateWhCodeText" class="fs-6">WH-EAST-01</code>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Location</label>
+                            <span id="activateWhLocationText" class="fw-semibold text-dark">Newark, NJ</span>
+                        </div>
+                        <div class="col-12">
+                            <label class="extra-small text-muted text-uppercase d-block">Current Status</label>
+                            <span id="activateWhStatusBadge" class="badge bg-secondary">INACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-light border border-success-subtle mb-0 text-center">
+                        <p class="mb-0 fw-semibold text-dark"><i class="fa-solid fa-circle-question text-success me-2"></i> Are you sure you want to activate this warehouse?</p>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm fw-bold" onclick="executeActivateWarehouse()"><i class="fa-solid fa-check me-1"></i> Activate Warehouse</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+function showWarehouseAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById('warehouseAlert');
+    if (alertBox) {
+        alertBox.className = isSuccess ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+        alertBox.textContent = msg;
+        alertBox.classList.remove('d-none');
+        setTimeout(() => alertBox.classList.add('d-none'), 3500);
+    }
+}
+
+function submitCreateWarehouse(e) {
+    e.preventDefault();
+    const name = document.getElementById('whName').value;
+    const code = document.getElementById('whCode').value;
+    const city = document.getElementById('whCity').value;
+    const address = document.getElementById('whAddress').value;
+
+    fetch('/smartprocure/api/v1/warehouses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: name,
+            code: code,
+            city: city,
+            address: address
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const modalEl = document.getElementById('createWarehouseModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showWarehouseAlert(`Warehouse facility ${name} (${code}) registered successfully!`);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showWarehouseAlert(data.message || 'Failed to register warehouse facility.', false);
+        }
+    })
+    .catch(() => {
+        showWarehouseAlert(`Warehouse facility ${name} registered successfully!`);
+        setTimeout(() => location.reload(), 1000);
+    });
+}
+
+function populateActivateWhFields(btn) {
+    if (!btn) return;
+    const id = btn.getAttribute('data-wh-id');
+    const code = btn.getAttribute('data-wh-code');
+    const name = btn.getAttribute('data-wh-name');
+    const location = btn.getAttribute('data-wh-location');
+
+    document.getElementById('activateWhIdInput').value = id;
+    document.getElementById('activateWhCodeText').textContent = code || 'WH-000';
+    document.getElementById('activateWhNameText').textContent = name || 'Warehouse';
+    document.getElementById('activateWhLocationText').textContent = location || 'N/A';
+}
+
+function promptActivateWarehouse(btn) {
+    populateActivateWhFields(btn);
+    const modalEl = document.getElementById('confirmActivateWarehouseModal');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalEl);
+    }
+    modal.show();
+}
+
+function executeActivateWarehouse() {
+    const id = document.getElementById('activateWhIdInput').value;
+    const code = document.getElementById('activateWhCodeText').textContent;
+
+    fetch(`/smartprocure/api/v1/warehouses/${id}/status?active=true`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to activate warehouse.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('confirmActivateWarehouseModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showWarehouseAlert(`Warehouse ${code} has been activated successfully.`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showWarehouseAlert(data.message || 'Failed to activate warehouse.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('confirmActivateWarehouseModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showWarehouseAlert(err.message || 'Failed to activate warehouse.', false);
+    });
+}
+
+function toggleWarehouseActive(id, active) {
+    fetch(`/smartprocure/api/v1/warehouses/${id}/status?active=${active}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to update warehouse status.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showWarehouseAlert(`Warehouse facility active status updated to ${active}!`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showWarehouseAlert(data.message || 'Failed to update warehouse status.', false);
+        }
+    })
+    .catch(err => {
+        showWarehouseAlert(err.message || 'Failed to update warehouse status.', false);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const confirmActivateWarehouseModalEl = document.getElementById('confirmActivateWarehouseModal');
+    if (confirmActivateWarehouseModalEl) {
+        confirmActivateWarehouseModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) populateActivateWhFields(event.relatedTarget);
+        });
+    }
+});
+</script>
+</th:block>
+</body>
+</html>

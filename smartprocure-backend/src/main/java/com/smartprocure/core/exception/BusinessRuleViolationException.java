@@ -1,0 +1,21 @@
+package com.smartprocure.core.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+/**
+ * Exception thrown when a core procurement or business domain rule is violated.
+ *
+ * @author Principal Java Architect
+ */
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class BusinessRuleViolationException extends RuntimeException {
+
+    public BusinessRuleViolationException(String message) {
+        super(message);
+    }
+
+    public BusinessRuleViolationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}

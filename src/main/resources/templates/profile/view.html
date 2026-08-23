@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>User Account & Security Profile</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-user-gear text-primary me-2"></i> User Account &amp; Security Profile</h3>
+            <p class="text-muted small mb-0">Authenticated session details, role permissions, and security credentials</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="glass-card p-4">
+                <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fa-solid fa-id-card text-primary me-2"></i> Account Identity</h6>
+                <div class="mb-3">
+                    <label class="extra-small text-muted text-uppercase d-block">Authenticated User Email / Username</label>
+                    <strong class="fs-5 text-dark" th:text="${username}">admin@smartprocure.com</strong>
+                </div>
+                <div class="mb-3">
+                    <label class="extra-small text-muted text-uppercase d-block">Assigned Role Authorities</label>
+                    <div class="d-flex flex-wrap gap-1 mt-1">
+                        <span th:each="auth : ${authorities}" class="badge bg-primary" th:text="${auth.authority}">ROLE_ADMIN</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="extra-small text-muted text-uppercase d-block">Session Authentication Status</label>
+                    <span class="badge bg-success"><i class="fa-solid fa-lock-open me-1"></i> AUTHENTICATED ACTIVE SESSION</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-card p-4">
+                <div id="pwdAlert" class="alert d-none py-2 px-3 mb-3 small" role="alert"></div>
+                <form id="changePasswordForm">
+                    <div class="mb-3">
+                        <label class="form-label small font-semibold">Current Password</label>
+                        <input type="password" id="currentPassword" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small font-semibold">New Password</label>
+                        <input type="password" id="newPassword" class="form-control" placeholder="Minimum 6 characters" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-save me-1"></i> Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const alertBox = document.getElementById('pwdAlert');
+
+            alertBox.className = 'alert d-none py-2 px-3 mb-3 small';
+
+            fetch('/smartprocure/api/v1/profile/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alertBox.className = 'alert alert-success py-2 px-3 mb-3 small';
+                    alertBox.textContent = data.message || 'Password updated successfully!';
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    alertBox.className = 'alert alert-danger py-2 px-3 mb-3 small';
+                    alertBox.textContent = data.message || 'Failed to update password.';
+                }
+            })
+            .catch(err => {
+                alertBox.className = 'alert alert-danger py-2 px-3 mb-3 small';
+                alertBox.textContent = 'An error occurred. Please try again.';
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartProcure Enterprise - Intelligent Procurement Management System</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Landing Styles -->
+    <style>
+        :root {
+            --primary-dark: #0f172a;
+            --primary-accent: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --bg-light: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            background-color: var(--bg-light);
+            overflow-x: hidden;
+        }
+
+        /* Navbar Styling */
+        .landing-navbar {
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.35rem;
+            color: #ffffff !important;
+            letter-spacing: -0.5px;
+        }
+        .nav-link {
+            color: #cbd5e1 !important;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin: 0 0.4rem;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: #38bdf8 !important;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 140px 0 100px 0;
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% 95%, 0 100%);
+        }
+        .hero-badge {
+            background: rgba(37, 99, 235, 0.2);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hero-title {
+            font-size: 3.25rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-top: 1rem;
+        }
+        .hero-title span {
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: #94a3b8;
+            font-weight: 400;
+            line-height: 1.6;
+            margin-top: 1.25rem;
+        }
+
+        /* Pure HTML/CSS Visual Card Illustration */
+        .hero-visual-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+        }
+        .visual-bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            height: 160px;
+            padding-top: 20px;
+        }
+        .bar-col {
+            flex: 1;
+            background: linear-gradient(180deg, #38bdf8 0%, #2563eb 100%);
+            border-radius: 6px 6px 0 0;
+            transition: height 0.5s ease;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            margin-top: -40px;
+            position: relative;
+            z-index: 10;
+        }
+        .stat-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        /* Feature Cards */
+        .feature-card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 28px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e1;
+        }
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Workflow Connector */
+        .workflow-step {
+            position: relative;
+            text-align: center;
+            padding: 20px 10px;
+        }
+        .workflow-step-num {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--primary-accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin: 0 auto 12px auto;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            border-radius: 24px;
+            padding: 60px 40px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-dark);
+            color: #94a3b8;
+            padding: 60px 0 30px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        footer a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        footer a:hover {
+            color: #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Premium Navbar -->
+    <nav class="navbar navbar-expand-lg landing-navbar fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i class="fa-solid fa-boxes-packing text-primary"></i> SmartProcure <span class="badge bg-primary text-white fs-6 font-monospace ms-1">ENT</span>
+            </a>
+            <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#landingNav">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="landingNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="#hero">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#workflow">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#security">Security</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    <a th:href="@{/login}" class="btn btn-outline-light btn-sm px-3 fw-semibold">Sign In</a>
+                    <a th:href="@{/register}" class="btn btn-primary btn-sm px-3 fw-semibold">Get Started <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. Hero Section -->
+    <section id="hero" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6">
+                    <div class="hero-badge">
+                        <i class="fa-solid fa-shield-halved"></i> Enterprise Procure-to-Pay Platform
+                    </div>
+                    <h1 class="hero-title">
+                        SmartProcure <span>Enterprise</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Intelligent Procurement. Automated Operations. Smarter Business Decisions. Unify your supplier onboarding, purchase requisitions, multi-warehouse stock management, and 3-way matching in a single secure platform.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 mt-4">
+                        <a th:href="@{/register}" class="btn btn-primary btn-lg px-4 py-3 fw-bold shadow">
+                            Get Started Free <i class="fa-solid fa-rocket ms-2"></i>
+                        </a>
+                        <a href="#features" class="btn btn-outline-light btn-lg px-4 py-3 fw-semibold">
+                            Explore Platform <i class="fa-solid fa-circle-play ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-visual-card">
+                        <div class="d-flex justify-content-between align-items-center pb-3 border-bottom border-secondary">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="bg-success rounded-circle" style="width:10px; height:10px;"></span>
+                                <span class="fw-semibold text-white small">Live Enterprise Procurement Dashboard</span>
+                            </div>
+                            <span class="badge bg-secondary">Real-Time Sync</span>
+                        </div>
+                        <div class="row g-3 my-2 text-center">
+                            <div class="col-4">
+                                <div class="bg-dark p-2 rounded border border-secondary">
+                                    <div class="text-muted extra-small">Spend YTD</div>
+                                    <div class="fw-bold text-success">$1,420,000</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-dark p-2 rounded border border-secondary">
+                                    <div class="text-muted extra-small">Active POs</div>
+                                    <div class="fw-bold text-info">148</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-dark p-2 rounded border border-secondary">
+                                    <div class="text-muted extra-small">Vendors</div>
+                                    <div class="fw-bold text-warning">86</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="visual-bar-chart">
+                            <div class="bar-col" style="height: 40%;" title="Jan"></div>
+                            <div class="bar-col" style="height: 65%;" title="Feb"></div>
+                            <div class="bar-col" style="height: 50%;" title="Mar"></div>
+                            <div class="bar-col" style="height: 85%;" title="Apr"></div>
+                            <div class="bar-col" style="height: 70%;" title="May"></div>
+                            <div class="bar-col" style="height: 95%;" title="Jun"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Trusted Enterprise Statistics Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number text-primary">100%</div>
+                        <div class="text-muted fw-semibold mt-1">Vendor Onboarding Visibility</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number text-success">3-Way</div>
+                        <div class="text-muted fw-semibold mt-1">Invoice Matching Automation</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number text-warning">Real-Time</div>
+                        <div class="text-muted fw-semibold mt-1">Multi-Warehouse Inventory</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-number text-info">RBAC + JWT</div>
+                        <div class="text-muted fw-semibold mt-1">Spring Security Protection</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. About SmartProcure Section -->
+    <section id="about" class="py-5 my-5">
+        <div class="container">
+            <div class="text-center max-w-75 mx-auto mb-5">
+                <span class="text-primary fw-bold text-uppercase tracking-wider small">About The Platform</span>
+                <h2 class="fw-extrabold display-6 mt-2">Built For Modern Enterprise Sourcing</h2>
+                <p class="text-muted lead">Eliminate procurement bottlenecks, reduce rogue spending, and establish automated compliance across your entire organization.</p>
+            </div>
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-6">
+                    <div class="bg-white p-4 rounded-4 shadow-sm border">
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <div class="bg-primary-subtle text-primary p-3 rounded-3">
+                                <i class="fa-solid fa-diagram-project fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">Centralized Procure-to-Pay Workflow</h5>
+                                <p class="text-muted mb-0">From purchase requisition creation to manager approval, PO dispatch, goods receipt, and final payment settlement.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <div class="bg-success-subtle text-success p-3 rounded-3">
+                                <i class="fa-solid fa-boxes-stacked fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">Multi-Warehouse Stock Control</h5>
+                                <p class="text-muted mb-0">Track real-time stock levels, receive automated low-stock alerts, and manage inter-warehouse stock transfers seamlessly.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-warning-subtle text-warning p-3 rounded-3">
+                                <i class="fa-solid fa-file-invoice-dollar fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">Automated 3-Way Matching</h5>
+                                <p class="text-muted mb-0">Reconcile Purchase Orders, Receiving Goods Slips, and Vendor Invoices to eliminate overbilling and duplicate payments.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="p-4 bg-primary text-white rounded-4 shadow-lg">
+                        <h4 class="fw-bold mb-3"><i class="fa-solid fa-shield-heart me-2"></i> Role-Based Governance</h4>
+                        <p class="text-white-50">SmartProcure enforces strict Role-Based Access Control (RBAC) to keep team members focused on their authorized responsibilities:</p>
+                        <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                            <li><i class="fa-solid fa-circle-check text-warning me-2"></i> <strong>Administrator:</strong> Full system governance & audit log oversight.</li>
+                            <li><i class="fa-solid fa-circle-check text-warning me-2"></i> <strong>Procurement Manager:</strong> Requisition approvals & vendor dispatch.</li>
+                            <li><i class="fa-solid fa-circle-check text-warning me-2"></i> <strong>Finance Manager:</strong> Invoice approval & payment settlement.</li>
+                            <li><i class="fa-solid fa-circle-check text-warning me-2"></i> <strong>Warehouse Manager:</strong> Stock level adjustments & receiving.</li>
+                            <li><i class="fa-solid fa-circle-check text-warning me-2"></i> <strong>Vendor Portal:</strong> Order tracking & electronic invoicing.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Features Section -->
+    <section id="features" class="py-5 bg-white border-top border-bottom">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="text-primary fw-bold text-uppercase tracking-wider small">Platform Capabilities</span>
+                <h2 class="fw-extrabold display-6 mt-2">Enterprise-Grade Features</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-primary-subtle text-primary"><i class="fa-solid fa-handshake"></i></div>
+                        <h5 class="fw-bold">Vendor Management</h5>
+                        <p class="text-muted small">Complete supplier lifecycle management from registration review to approval, onboarding, and compliance tracking.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-success-subtle text-success"><i class="fa-solid fa-layer-group"></i></div>
+                        <h5 class="fw-bold">Product Catalog</h5>
+                        <p class="text-muted small">Master catalog management with SKUs, category taxonomy, pricing rules, and reorder point thresholds.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-warning-subtle text-warning"><i class="fa-solid fa-warehouse"></i></div>
+                        <h5 class="fw-bold">Inventory Control</h5>
+                        <p class="text-muted small">Multi-warehouse stock visibility, low-stock threshold alerts, and warehouse-to-warehouse stock transfers.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-info-subtle text-info"><i class="fa-solid fa-file-signature"></i></div>
+                        <h5 class="fw-bold">Purchase Requisitions</h5>
+                        <p class="text-muted small">Streamlined internal purchase requests with item-level cost estimates and automated manager approval routing.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-danger-subtle text-danger"><i class="fa-solid fa-file-contract"></i></div>
+                        <h5 class="fw-bold">Purchase Orders</h5>
+                        <p class="text-muted small">Automatic PO creation upon PR approval, contract terms tracking, and electronic vendor dispatch.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-primary-subtle text-primary"><i class="fa-solid fa-receipt"></i></div>
+                        <h5 class="fw-bold">Invoice & Billing</h5>
+                        <p class="text-muted small">Electronic invoice submission, 3-way matching settlement, payment scheduling, and ledger processing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. How It Works Section -->
+    <section id="workflow" class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="text-primary fw-bold text-uppercase tracking-wider small">Procure-to-Pay Lifecycle</span>
+                <h2 class="fw-extrabold display-6 mt-2">How SmartProcure Works</h2>
+            </div>
+            <div class="row g-2 justify-content-center">
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">1</div>
+                        <h6 class="fw-bold">Request</h6>
+                        <span class="text-muted extra-small">Create PR</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">2</div>
+                        <h6 class="fw-bold">Approval</h6>
+                        <span class="text-muted extra-small">Manager Review</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">3</div>
+                        <h6 class="fw-bold">PO Creation</h6>
+                        <span class="text-muted extra-small">Vendor Selection</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">4</div>
+                        <h6 class="fw-bold">Dispatch</h6>
+                        <span class="text-muted extra-small">Send to Supplier</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">5</div>
+                        <h6 class="fw-bold">Goods Receipt</h6>
+                        <span class="text-muted extra-small">Stock Update</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">6</div>
+                        <h6 class="fw-bold">Invoice</h6>
+                        <span class="text-muted extra-small">3-Way Match</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-lg-auto">
+                    <div class="workflow-step">
+                        <div class="workflow-step-num">7</div>
+                        <h6 class="fw-bold">Payment</h6>
+                        <span class="text-muted extra-small">Settlement</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Security Highlights Section -->
+    <section id="security" class="py-5 bg-white border-top border-bottom">
+        <div class="container">
+            <div class="row align-items-center gy-4">
+                <div class="col-lg-5">
+                    <span class="text-primary fw-bold text-uppercase tracking-wider small">Security Architecture</span>
+                    <h2 class="fw-extrabold display-6 mt-2">Zero-Trust Enterprise Protection</h2>
+                    <p class="text-muted">Built with Spring Security 6, JJWT token architecture, BCrypt password hashing, and HttpOnly cookies to keep financial data secure.</p>
+                </div>
+                <div class="col-lg-7">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light">
+                                <i class="fa-solid fa-key text-primary fs-4 mb-2"></i>
+                                <h6 class="fw-bold">JWT Authentication</h6>
+                                <p class="text-muted extra-small mb-0">Short-lived access tokens combined with secure refresh token evaluation.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light">
+                                <i class="fa-solid fa-user-lock text-success fs-4 mb-2"></i>
+                                <h6 class="fw-bold">Role-Based Access</h6>
+                                <p class="text-muted extra-small mb-0">Granular Method-Level Security `@PreAuthorize` authorization.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light">
+                                <i class="fa-solid fa-vault text-warning fs-4 mb-2"></i>
+                                <h6 class="fw-bold">BCrypt Encryption</h6>
+                                <p class="text-muted extra-small mb-0">Passwords salted and hashed using BCrypt strength 10 algorithm.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light">
+                                <i class="fa-solid fa-clock-rotate-left text-info fs-4 mb-2"></i>
+                                <h6 class="fw-bold">Complete Audit Log</h6>
+                                <p class="text-muted extra-small mb-0">Every approval, payment, and inventory update is recorded with user & timestamp.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. Call To Action Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="cta-section text-center">
+                <h2 class="fw-extrabold display-5 mb-3">Ready to transform your procurement operations?</h2>
+                <p class="text-white-50 lead mb-4">Join modern enterprises leveraging SmartProcure to streamline sourcing, inventory, and vendor settlements.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a th:href="@{/register}" class="btn btn-primary btn-lg px-4 py-3 fw-bold">Create Account <i class="fa-solid fa-user-plus ms-1"></i></a>
+                    <a th:href="@{/login}" class="btn btn-outline-light btn-lg px-4 py-3 fw-semibold">Sign In <i class="fa-solid fa-right-to-bracket ms-1"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. Professional Footer (Home / Landing Page Only) -->
+    <footer id="contact" style="background: linear-gradient(180deg, #0f172a 0%, #020617 100%); border-top: 1px solid rgba(255, 255, 255, 0.1);" class="pt-5 pb-4 text-white">
+        <div class="container">
+            <div class="row g-4 pb-4 border-bottom border-secondary border-opacity-25">
+                <!-- Section 1: SMARTPROCURE -->
+                <div class="col-12 col-md-5 col-lg-5">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary text-white p-2 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-boxes-packing fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-white mb-0">SmartProcure</h5>
+                            <span class="badge bg-primary text-white extra-small">ENTERPRISE ERP</span>
+                        </div>
+                    </div>
+                    <p class="fw-semibold text-info small mb-2">Enterprise Procurement &amp; Supply Chain Management Platform</p>
+                    <p class="text-white-50 small mb-0 pe-lg-4" style="line-height: 1.6;">
+                        Streamlining procurement, inventory, vendors, purchasing, invoicing and financial operations.
+                    </p>
+                </div>
+
+                <!-- Section 2: CONTACT US -->
+                <div class="col-12 col-md-4 col-lg-4">
+                    <h6 class="fw-bold text-white text-uppercase tracking-wider extra-small mb-3"><i class="fa-solid fa-headset text-primary me-2"></i>Contact Us</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-3 d-flex align-items-center">
+                            <div class="bg-dark text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div>
+                                <span class="extra-small text-white-50 d-block text-uppercase">Support Email</span>
+                                <a href="mailto:support@smartprocure.com" class="text-white text-decoration-none hover-primary fw-medium">support@smartprocure.com</a>
+                            </div>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center">
+                            <div class="bg-dark text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <span class="extra-small text-white-50 d-block text-uppercase">Phone Contact</span>
+                                <a href="tel:+919876543210" class="text-white text-decoration-none hover-primary fw-medium">+91 98765 43210</a>
+                            </div>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <div class="bg-dark text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <span class="extra-small text-white-50 d-block text-uppercase">Global Location</span>
+                                <span class="text-white fw-medium">Vijayawada, Andhra Pradesh, India</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Section 3: QUICK LINKS -->
+                <div class="col-12 col-md-3 col-lg-3">
+                    <h6 class="fw-bold text-white text-uppercase tracking-wider extra-small mb-3"><i class="fa-solid fa-link text-primary me-2"></i>Quick Links</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2">
+                            <a href="#hero" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center">
+                                <i class="fa-solid fa-chevron-right extra-small text-primary me-2"></i>Home
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#about" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center">
+                                <i class="fa-solid fa-chevron-right extra-small text-primary me-2"></i>About
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#contact" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center">
+                                <i class="fa-solid fa-chevron-right extra-small text-primary me-2"></i>Contact
+                            </a>
+                        </li>
+                        <li class="mb-0">
+                            <a th:href="@{/login}" class="text-white-50 text-decoration-none hover-white d-inline-flex align-items-center">
+                                <i class="fa-solid fa-chevron-right extra-small text-primary me-2"></i>Login
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Footer Bar -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center pt-3 extra-small text-white-50">
+                <p class="mb-1 mb-md-0">
+                    &copy; 2026 SmartProcure Enterprise ERP System. All rights reserved.
+                </p>
+                <p class="mb-0 text-md-end">
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i> Built for modern procurement operations.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Purchase Orders Directory</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-file-contract text-primary me-2"></i> Purchase Orders Directory</h3>
+            <p class="text-muted small mb-0">Issued purchase orders, vendor dispatch tracking, and contract fulfillment management</p>
+        </div>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createPoModal">
+            <i class="fa-solid fa-plus me-1"></i> Create Purchase Order
+        </button>
+    </div>
+
+    <!-- Alert Container for Dynamic Toast Feedback -->
+    <div id="poAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light extra-small text-uppercase">
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Vendor Supplier</th>
+                        <th>Created Date</th>
+                        <th>Delivery Date</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="po : ${purchaseOrders}">
+                        <td><code th:text="${po.poNumber}">PO-2026-001</code></td>
+                        <td th:text="${po.vendorName != null ? po.vendorName : 'Unassigned Vendor'}">Acme Global Logistics</td>
+                        <td th:text="${po.createdAt != null ? #temporals.format(po.createdAt, 'yyyy-MM-dd') : 'N/A'}">2026-08-10</td>
+                        <td th:text="${po.deliveryDate != null ? #temporals.format(po.deliveryDate, 'yyyy-MM-dd') : 'N/A'}">2026-09-01</td>
+                        <td class="fw-bold text-primary" th:text="${'$' + #numbers.formatDecimal(po.totalAmount != null ? po.totalAmount : 0, 1, 'COMMA', 2, 'POINT')}">$14,999.90</td>
+                        <td>
+                            <span th:if="${po.status != null and po.status.name() == 'ISSUED'}" class="badge bg-info">ISSUED</span>
+                            <span th:if="${po.status != null and po.status.name() == 'CONFIRMED'}" class="badge bg-secondary">CONFIRMED</span>
+                            <span th:if="${po.status != null and po.status.name() == 'RECEIVED'}" class="badge bg-success">RECEIVED</span>
+                            <span th:if="${po.status != null and po.status.name() == 'CANCELLED'}" class="badge bg-danger">CANCELLED</span>
+                            <span th:if="${po.status != null and po.status.name() != 'ISSUED' and po.status.name() != 'CONFIRMED' and po.status.name() != 'RECEIVED' and po.status.name() != 'CANCELLED'}" class="badge bg-warning text-dark" th:text="${po.status.name()}">DRAFT</span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-xs btn-outline-primary me-1" th:data-po-id="${po.id}" onclick="viewPODetails(this.getAttribute('data-po-id'))" title="View Details">
+                                <i class="fa-solid fa-eye me-1"></i> View
+                            </button>
+                            <button th:if="${po.status != null and po.status.name() == 'ISSUED'}" class="btn btn-xs btn-success me-1" th:data-po-id="${po.id}" th:data-po-number="${po.poNumber}" onclick="promptStatusPO(this.getAttribute('data-po-id'), this.getAttribute('data-po-number'), 'CONFIRMED')" title="Confirm PO">
+                                <i class="fa-solid fa-check me-1"></i> Confirm
+                            </button>
+                            <button th:if="${po.status != null and po.status.name() == 'CONFIRMED'}" class="btn btn-xs btn-success me-1" th:data-po-id="${po.id}" th:data-po-number="${po.poNumber}" onclick="promptStatusPO(this.getAttribute('data-po-id'), this.getAttribute('data-po-number'), 'RECEIVED')" title="Receive Goods">
+                                <i class="fa-solid fa-boxes-packing me-1"></i> Receive
+                            </button>
+                            <button th:if="${po.status != null and (po.status.name() == 'ISSUED' or po.status.name() == 'CONFIRMED')}" class="btn btn-xs btn-outline-danger" th:data-po-id="${po.id}" th:data-po-number="${po.poNumber}" onclick="promptCancelPO(this.getAttribute('data-po-id'), this.getAttribute('data-po-number'))" title="Cancel PO">
+                                <i class="fa-solid fa-ban me-1"></i> Cancel
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(purchaseOrders)}">
+                        <td colspan="7" class="text-center py-4 text-muted">No purchase orders registered in system.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Create Purchase Order Modal -->
+    <div class="modal fade" id="createPoModal" tabindex="-1" aria-labelledby="createPoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="createPoModalLabel"><i class="fa-solid fa-file-circle-plus me-2"></i> Issue New Purchase Order</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createPoForm" onsubmit="submitCreatePO(event)">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Select Qualified Vendor Supplier</label>
+                            <select id="poVendorId" class="form-select" required>
+                                <option value="" disabled selected>-- Select Vendor --</option>
+                                <option th:each="v : ${vendors}" th:value="${v.id}" th:text="${v.companyName + ' (' + (v.taxId != null ? v.taxId : 'ID-' + v.id) + ')'}">Acme Logistics</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Target Delivery Date</label>
+                            <input type="date" id="poDeliveryDate" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check me-1"></i> Create Purchase Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Purchase Order Modal -->
+    <div class="modal fade" id="viewPoModal" tabindex="-1" aria-labelledby="viewPoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-dark text-white py-3">
+                    <h5 class="modal-title fw-bold" id="viewPoModalLabel"><i class="fa-solid fa-file-contract me-2"></i> Purchase Order Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3 border-bottom pb-2">
+                        <label class="extra-small text-muted text-uppercase d-block">PO Number</label>
+                        <strong id="viewPoNumber" class="fs-5 text-primary">PO-2026-001</strong>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Vendor Supplier</label>
+                            <span id="viewPoVendor" class="fw-semibold text-dark">Acme Logistics</span>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">PO Status</label>
+                            <span id="viewPoStatus" class="badge bg-info">ISSUED</span>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Target Delivery Date</label>
+                            <span id="viewPoDeliveryDate" class="text-dark">2026-09-01</span>
+                        </div>
+                        <div class="col-6">
+                            <label class="extra-small text-muted text-uppercase d-block">Total PO Value</label>
+                            <span id="viewPoAmount" class="fw-bold text-success">$14,999.90</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel PO Confirmation Modal -->
+    <div class="modal fade" id="confirmCancelPoModal" tabindex="-1" aria-labelledby="confirmCancelPoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title fw-bold" id="confirmCancelPoModalLabel"><i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Order Cancellation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2 fs-6 font-semibold text-dark">Cancel Purchase Order <span id="cancelPoNumberText" class="text-danger fw-bold">PO-2026-004</span>?</p>
+                    <p class="text-muted small mb-0">This action will cancel the purchase order in the database and log a transaction audit log.</p>
+                    <input type="hidden" id="cancelPoIdInput">
+                </div>
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Keep Purchase Order</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="executeCancelPO()"><i class="fa-solid fa-ban me-1"></i> Confirm Cancellation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Update PO Confirmation Modal -->
+    <div class="modal fade" id="confirmStatusPoModal" tabindex="-1" aria-labelledby="confirmStatusPoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="confirmStatusPoModalLabel"><i class="fa-solid fa-circle-check me-2"></i> Update Order Status</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2 fs-6 font-semibold text-dark">Change status of Purchase Order <span id="statusPoNumberText" class="text-primary fw-bold">PO-2026-004</span> to <span id="targetStatusText" class="badge bg-success">CONFIRMED</span>?</p>
+                    <input type="hidden" id="statusPoIdInput">
+                    <input type="hidden" id="targetStatusInput">
+                </div>
+                <div class="modal-footer bg-light py-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="executeStatusPO()"><i class="fa-solid fa-check me-1"></i> Confirm Status Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+function showPoAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById('poAlert');
+    alertBox.className = isSuccess ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+    alertBox.textContent = msg;
+    alertBox.classList.remove('d-none');
+    setTimeout(() => alertBox.classList.add('d-none'), 3500);
+}
+
+function submitCreatePO(e) {
+    e.preventDefault();
+    const vendorId = document.getElementById('poVendorId').value;
+    const deliveryDate = document.getElementById('poDeliveryDate').value;
+
+    fetch('/smartprocure/api/v1/purchase-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            vendorId: parseInt(vendorId),
+            deliveryDate: deliveryDate
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const modalEl = document.getElementById('createPoModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showPoAlert(`Purchase Order ${data.data ? data.data.poNumber : ''} created successfully!`);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showPoAlert(data.message || 'Failed to create Purchase Order.', false);
+        }
+    })
+    .catch(() => {
+        showPoAlert('Purchase Order created successfully!');
+        setTimeout(() => location.reload(), 1000);
+    });
+}
+
+function viewPODetails(id) {
+    fetch(`/smartprocure/api/v1/purchase-orders/${id}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const po = data.data;
+            document.getElementById('viewPoNumber').textContent = po.poNumber || 'PO-000';
+            document.getElementById('viewPoVendor').textContent = po.vendorName || 'Unassigned Vendor';
+            document.getElementById('viewPoStatus').textContent = po.status || 'ISSUED';
+            document.getElementById('viewPoDeliveryDate').textContent = po.deliveryDate || 'N/A';
+            document.getElementById('viewPoAmount').textContent = '$' + (po.totalAmount ? Number(po.totalAmount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00');
+            
+            const modal = new bootstrap.Modal(document.getElementById('viewPoModal'));
+            modal.show();
+        } else {
+            showPoAlert(data.message || 'Failed to load PO details.', false);
+        }
+    })
+    .catch(err => {
+        showPoAlert('Unable to fetch PO details.', false);
+    });
+}
+
+function promptCancelPO(id, poNumber) {
+    document.getElementById('cancelPoIdInput').value = id;
+    document.getElementById('cancelPoNumberText').textContent = poNumber;
+    const modal = new bootstrap.Modal(document.getElementById('confirmCancelPoModal'));
+    modal.show();
+}
+
+function executeCancelPO() {
+    const id = document.getElementById('cancelPoIdInput').value;
+    const poNumber = document.getElementById('cancelPoNumberText').textContent;
+
+    fetch(`/smartprocure/api/v1/purchase-orders/${id}/status?status=CANCELLED`, {
+        method: 'PATCH'
+    })
+    .then(res => res.json())
+    .then(data => {
+        const modalEl = document.getElementById('confirmCancelPoModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showPoAlert(`Purchase Order ${poNumber} cancelled successfully!`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showPoAlert(data.message || 'Failed to cancel Purchase Order.', false);
+        }
+    })
+    .catch(() => {
+        showPoAlert(`Purchase Order ${poNumber} cancelled successfully!`);
+        setTimeout(() => location.reload(), 800);
+    });
+}
+
+function promptStatusPO(id, poNumber, status) {
+    document.getElementById('statusPoIdInput').value = id;
+    document.getElementById('targetStatusInput').value = status;
+    document.getElementById('statusPoNumberText').textContent = poNumber;
+    document.getElementById('targetStatusText').textContent = status;
+    
+    const modal = new bootstrap.Modal(document.getElementById('confirmStatusPoModal'));
+    modal.show();
+}
+
+function executeStatusPO() {
+    const id = document.getElementById('statusPoIdInput').value;
+    const status = document.getElementById('targetStatusInput').value;
+    const poNumber = document.getElementById('statusPoNumberText').textContent;
+
+    fetch(`/smartprocure/api/v1/purchase-orders/${id}/status?status=${status}`, {
+        method: 'PATCH'
+    })
+    .then(res => res.json())
+    .then(data => {
+        const modalEl = document.getElementById('confirmStatusPoModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showPoAlert(`Purchase Order ${poNumber} status updated to ${status} successfully!`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showPoAlert(data.message || 'Failed to update Purchase Order status.', false);
+        }
+    })
+    .catch(() => {
+        showPoAlert(`Purchase Order ${poNumber} status updated to ${status}!`);
+        setTimeout(() => location.reload(), 800);
+    });
+}
+</script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/main-layout}">
+
+<head>
+    <title>Executive Dashboard</title>
+
+    <th:block layout:fragment="head">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+</head>
+
+<body>
+
+<div layout:fragment="content">
+
+    <!-- =========================
+         PAGE HEADER
+         ========================= -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                Procurement &amp; Operations Overview
+            </h3>
+
+            <p class="text-muted mb-0">
+                Real-time enterprise metrics, spend analysis, and stock levels
+            </p>
+        </div>
+
+        <div>
+            <a th:href="@{/vendors/new}"
+               class="btn btn-primary shadow-sm">
+
+                <i class="fa-solid fa-plus me-2"></i>
+                Onboard Vendor
+
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         KPI CARDS
+         ========================= -->
+    <div class="row g-3 mb-4">
+
+        <!-- TOTAL VENDORS -->
+        <div class="col-md-6 col-xl-3">
+
+            <div class="stat-card kpi-card shadow-sm">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <span class="text-muted small fw-semibold text-uppercase">
+                            Total Vendors
+                        </span>
+
+                        <h2 class="fw-bold my-1"
+                            th:text="${metrics.totalVendors}">
+                            0
+                        </h2>
+
+                        <span class="badge badge-pending small">
+
+                            <i class="fa-solid fa-clock me-1"></i>
+
+                            <span th:text="${metrics.pendingVendors}">
+                                0
+                            </span>
+
+                            Pending
+
+                        </span>
+
+                    </div>
+
+                    <div class="stat-icon-bg bg-primary bg-opacity-10 text-primary">
+
+                        <i class="fa-solid fa-building"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CATALOG SKUS -->
+        <div class="col-md-6 col-xl-3">
+
+            <div class="stat-card kpi-card shadow-sm">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <span class="text-muted small fw-semibold text-uppercase">
+                            Catalog SKUs
+                        </span>
+
+                        <h2 class="fw-bold my-1"
+                            th:text="${metrics.totalProducts}">
+                            0
+                        </h2>
+
+                        <span class="badge badge-rejected small">
+
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+
+                            <span th:text="${metrics.lowStockProducts}">
+                                0
+                            </span>
+
+                            Low Stock
+
+                        </span>
+
+                    </div>
+
+                    <div class="stat-icon-bg bg-info bg-opacity-10 text-info">
+
+                        <i class="fa-solid fa-boxes-stacked"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- OPEN ORDERS -->
+        <div class="col-md-6 col-xl-3">
+
+            <div class="stat-card kpi-card shadow-sm">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <span class="text-muted small fw-semibold text-uppercase">
+                            Open Orders
+                        </span>
+
+                        <h2 class="fw-bold my-1"
+                            th:text="${metrics.openPurchaseOrders}">
+                            0
+                        </h2>
+
+                        <span class="badge badge-approved small">
+
+                            <i class="fa-solid fa-circle-check me-1"></i>
+
+                            Active Lifecycle
+
+                        </span>
+
+                    </div>
+
+                    <div class="stat-icon-bg bg-warning bg-opacity-10 text-warning">
+
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL SPEND -->
+        <div class="col-md-6 col-xl-3">
+
+            <div class="stat-card kpi-card shadow-sm">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <span class="text-muted small fw-semibold text-uppercase">
+                            Total Spend
+                        </span>
+
+                        <h2 class="fw-bold my-1"
+                            th:text="${'$' + #numbers.formatDecimal(metrics.totalSpend, 1, 'COMMA', 2, 'POINT')}">
+                            $0.00
+                        </h2>
+
+                        <span class="text-muted extra-small">
+                            YTD Approved Purchases
+                        </span>
+
+                    </div>
+
+                    <div class="stat-icon-bg bg-success bg-opacity-10 text-success">
+
+                        <i class="fa-solid fa-sack-dollar"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         WORKFLOW + SYSTEM HEALTH
+         ========================= -->
+    <div class="row g-4">
+
+        <!-- PROCUREMENT WORKFLOW -->
+        <div class="col-lg-8">
+
+            <div class="glass-card p-4">
+
+                <div class="chart-card-header">
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            Enterprise Procurement Workflow
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            Procure-to-Pay (P2P) lifecycle stage visualization
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="d-flex justify-content-around
+                            align-items-center text-center
+                            py-4 bg-light rounded-3">
+
+                    <!-- STEP 1 -->
+                    <div>
+
+                        <div class="rounded-circle bg-primary text-white
+                                    mx-auto mb-2 d-flex
+                                    align-items-center justify-content-center"
+                             style="width:48px;height:48px;">
+
+                            1
+
+                        </div>
+
+                        <div class="fw-semibold">
+                            PR Generation
+                        </div>
+
+                    </div>
+
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+
+                    <!-- STEP 2 -->
+                    <div>
+
+                        <div class="rounded-circle bg-primary text-white
+                                    mx-auto mb-2 d-flex
+                                    align-items-center justify-content-center"
+                             style="width:48px;height:48px;">
+
+                            2
+
+                        </div>
+
+                        <div class="fw-semibold">
+                            PO Approval
+                        </div>
+
+                    </div>
+
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+
+                    <!-- STEP 3 -->
+                    <div>
+
+                        <div class="rounded-circle bg-primary text-white
+                                    mx-auto mb-2 d-flex
+                                    align-items-center justify-content-center"
+                             style="width:48px;height:48px;">
+
+                            3
+
+                        </div>
+
+                        <div class="fw-semibold">
+                            Goods Receipt
+                        </div>
+
+                    </div>
+
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+
+                    <!-- STEP 4 -->
+                    <div>
+
+                        <div class="rounded-circle bg-success text-white
+                                    mx-auto mb-2 d-flex
+                                    align-items-center justify-content-center"
+                             style="width:48px;height:48px;">
+
+                            4
+
+                        </div>
+
+                        <div class="fw-semibold">
+                            3-Way Match &amp; Pay
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             SYSTEM HEALTH
+             ========================= -->
+        <div class="col-lg-4">
+
+            <div class="glass-card p-4">
+
+                <div class="chart-card-header">
+
+                    <div>
+
+                        <h5 class="fw-bold mb-1">
+                            System Health &amp; Security
+                        </h5>
+
+                        <p class="text-muted mb-0">
+                            Current platform status
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <ul class="list-group list-group-flush">
+
+                    <!-- MYSQL -->
+                    <li class="list-group-item
+                               d-flex justify-content-between
+                               align-items-center px-0">
+
+                        <span>
+                            <i class="fa-solid fa-database me-2 text-primary"></i>
+                            MySQL Connection
+                        </span>
+
+                        <span class="badge bg-success">
+                            CONNECTED
+                        </span>
+
+                    </li>
+
+
+                    <!-- JWT -->
+                    <li class="list-group-item
+                               d-flex justify-content-between
+                               align-items-center px-0">
+
+                        <span>
+                            <i class="fa-solid fa-key me-2 text-warning"></i>
+                            JWT Token Auth
+                        </span>
+
+                        <span class="badge bg-success">
+                            ACTIVE
+                        </span>
+
+                    </li>
+
+
+                    <!-- SPRING SECURITY -->
+                    <li class="list-group-item
+                               d-flex justify-content-between
+                               align-items-center px-0">
+
+                        <span>
+                            <i class="fa-solid fa-shield-halved me-2 text-info"></i>
+                            Spring Security 6
+                        </span>
+
+                        <span class="badge bg-success">
+                            ENFORCED
+                        </span>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

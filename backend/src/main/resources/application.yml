@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: smartprocure-backend
+
+server:
+  port: 8080
+  servlet:
+    context-path: /smartprocure
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

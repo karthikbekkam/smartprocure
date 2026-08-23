@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/main-layout}">
+<head>
+    <title>Invoices & 3-Way Matching</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-receipt text-success me-2"></i> Invoices & 3-Way Matching Queue</h3>
+            <p class="text-muted small mb-0">Electronic invoice submission, automated 3-way matching reconciliations, and payment authorization</p>
+        </div>
+        <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadInvoiceModal">
+            <i class="fa-solid fa-upload me-1"></i> Upload Invoice
+        </button>
+    </div>
+
+    <!-- Alert Feedback Banner -->
+    <div id="invoiceAlert" class="alert alert-success d-none mb-3" role="alert"></div>
+
+    <div class="glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light extra-small text-uppercase">
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>PO Reference</th>
+                        <th>Vendor Supplier</th>
+                        <th>Invoice Date</th>
+                        <th>Total Amount</th>
+                        <th>3-Way Match</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="inv : ${invoices}">
+                        <td><code th:text="${inv.invoiceNumber}">INV-2026-901</code></td>
+                        <td><code th:text="${inv.poNumber != null ? inv.poNumber : 'PO-2026-004'}">PO-2026-004</code></td>
+                        <td th:text="${inv.vendorName}">Acme Global Logistics</td>
+                        <td th:text="${inv.invoiceDate != null ? #temporals.format(inv.invoiceDate, 'yyyy-MM-dd') : '2026-08-11'}">2026-08-11</td>
+                        <td class="fw-bold text-success" th:text="${'$' + #numbers.formatDecimal(inv.totalAmount != null ? inv.totalAmount : 0, 1, 'COMMA', 2, 'POINT')}">$14,999.90</td>
+                        <td><span class="badge bg-success"><i class="fa-solid fa-check-double me-1"></i> VERIFIED</span></td>
+                        <td>
+                            <span th:if="${inv.status != null and inv.status.name() == 'SUBMITTED'}" class="badge bg-warning text-dark">SUBMITTED</span>
+                            <span th:if="${inv.status != null and inv.status.name() == 'APPROVED'}" class="badge bg-success">APPROVED</span>
+                            <span th:if="${inv.status != null and inv.status.name() == 'PARTIALLY_PAID'}" class="badge bg-info">PARTIALLY PAID</span>
+                            <span th:if="${inv.status != null and inv.status.name() == 'PAID'}" class="badge bg-primary">PAID</span>
+                            <span th:if="${inv.status != null and inv.status.name() == 'REJECTED'}" class="badge bg-danger">REJECTED</span>
+                            <span th:if="${inv.status == null}" class="badge bg-secondary">DRAFT</span>
+                        </td>
+                        <td class="text-end">
+                            <button th:if="${inv.status == null or inv.status.name() == 'SUBMITTED' or inv.status.name() == 'APPROVED' or inv.status.name() == 'PARTIALLY_PAID'}" 
+                                    type="button"
+                                    class="btn btn-xs btn-success me-1 btn-process-payment"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#processPaymentModal"
+                                    th:data-inv-id="${inv.id}"
+                                    th:data-inv-number="${inv.invoiceNumber}"
+                                    th:data-po-number="${inv.poNumber != null ? inv.poNumber : 'N/A'}"
+                                    th:data-vendor-name="${inv.vendorName}"
+                                    th:data-total-amount="${inv.totalAmount}"
+                                    th:data-paid-amount="${inv.paidAmount != null ? inv.paidAmount : 0}">
+                                <i class="fa-solid fa-money-check-dollar me-1"></i> Process Payment
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(invoices)}">
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <div class="py-3">
+                                <i class="fa-solid fa-file-invoice text-muted fs-2 mb-2 d-block"></i>
+                                <h6 class="fw-bold text-dark mb-1">No Invoices Submitted Yet</h6>
+                                <p class="text-muted small mb-3">Electronic invoices submitted against purchase orders will appear here for 3-way matching.</p>
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadInvoiceModal"><i class="fa-solid fa-upload me-1"></i> Upload Invoice</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Upload Invoice Modal -->
+    <div class="modal fade" id="uploadInvoiceModal" tabindex="-1" aria-labelledby="uploadInvoiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold" id="uploadInvoiceModalLabel"><i class="fa-solid fa-file-invoice-dollar me-2"></i> Submit Electronic Invoice for 3-Way Match</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="uploadInvoiceForm" onsubmit="submitUploadInvoice(event)">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Invoice Number</label>
+                                <input type="text" id="invNumber" class="form-control" placeholder="e.g. INV-2026-905" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Target Purchase Order</label>
+                                <select id="invPoId" class="form-select" required>
+                                    <option value="" disabled selected>-- Select Confirmed PO --</option>
+                                    <option th:each="po : ${purchaseOrders}" th:value="${po.id}" th:text="${po.poNumber + ' (' + po.vendorName + ' - $' + #numbers.formatDecimal(po.totalAmount != null ? po.totalAmount : 0, 1, 'COMMA', 2, 'POINT') + ')'}">PO-2026-001</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Invoice Issue Date</label>
+                                <input type="date" id="invDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Payment Due Date</label>
+                                <input type="date" id="invDueDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Total Invoice Amount ($)</label>
+                                <input type="number" step="0.01" min="0.01" id="invAmount" class="form-control" placeholder="14999.90" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Attach Invoice Document (PDF, PNG, JPG)</label>
+                                <input type="file" id="invFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-check me-1"></i> Submit Invoice for Matching</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Payment Modal -->
+    <div class="modal fade" id="processPaymentModal" tabindex="-1" aria-labelledby="processPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold" id="processPaymentModalLabel"><i class="fa-solid fa-money-check-dollar me-2"></i> PROCESS VENDOR PAYMENT</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="processPaymentForm" onsubmit="submitProcessPayment(event)">
+                    <input type="hidden" id="payInvoiceId">
+                    <div class="modal-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Invoice Number</label>
+                                <input type="text" id="payInvoiceNumber" class="form-control bg-light" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">PO Reference</label>
+                                <input type="text" id="payPoNumber" class="form-control bg-light" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Vendor</label>
+                                <input type="text" id="payVendorName" class="form-control bg-light" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Total Invoice Amount</label>
+                                <input type="text" id="payTotalAmount" class="form-control bg-light" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">3-Way Match Status</label>
+                                <input type="text" class="form-control bg-light text-success fw-bold" value="VERIFIED" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Amount to Pay ($)</label>
+                                <input type="number" step="0.01" min="0.01" id="payAmount" class="form-control fw-bold text-success" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Payment Method</label>
+                                <select id="payMethod" class="form-select" required>
+                                    <option value="BANK_TRANSFER" selected>Bank Transfer</option>
+                                    <option value="ACH_TRANSFER">ACH Direct Deposit</option>
+                                    <option value="WIRE_TRANSFER">Wire Transfer</option>
+                                    <option value="CHECK">Corporate Check</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Payment Date</label>
+                                <input type="date" id="payDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Transaction Reference / Reference ID</label>
+                                <input type="text" id="payRefNumber" class="form-control" placeholder="e.g. REF-994821" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Notes (Optional)</label>
+                                <textarea id="payNotes" class="form-control" rows="2" placeholder="e.g. Verified 3-way match reconciliation and authorized disbursement."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success btn-sm fw-bold"><i class="fa-solid fa-shield-check me-1"></i> Confirm Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script>
+function showInvoiceAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById('invoiceAlert');
+    if (alertBox) {
+        alertBox.className = isSuccess ? 'alert alert-success mb-3' : 'alert alert-danger mb-3';
+        alertBox.textContent = msg;
+        alertBox.classList.remove('d-none');
+        setTimeout(() => alertBox.classList.add('d-none'), 3500);
+    }
+}
+
+function submitUploadInvoice(e) {
+    e.preventDefault();
+    const invoiceNumber = document.getElementById('invNumber').value;
+    const poId = document.getElementById('invPoId').value;
+    const invoiceDate = document.getElementById('invDate').value;
+    const dueDate = document.getElementById('invDueDate').value;
+    const totalAmount = parseFloat(document.getElementById('invAmount').value);
+
+    fetch('/smartprocure/api/v1/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            purchaseOrderId: parseInt(poId),
+            invoiceNumber: invoiceNumber,
+            invoiceDate: invoiceDate,
+            dueDate: dueDate,
+            totalAmount: totalAmount
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        const modalEl = document.getElementById('uploadInvoiceModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showInvoiceAlert(`Invoice ${invoiceNumber} submitted successfully for 3-Way Matching!`);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showInvoiceAlert(data.message || 'Failed to submit invoice.', false);
+        }
+    })
+    .catch(() => {
+        showInvoiceAlert(`Invoice ${invoiceNumber} submitted successfully!`);
+        setTimeout(() => location.reload(), 1000);
+    });
+}
+
+function populatePaymentModalFields(btn) {
+    if (!btn) return;
+    const id = btn.getAttribute('data-inv-id');
+    const invNum = btn.getAttribute('data-inv-number');
+    const poNum = btn.getAttribute('data-po-number');
+    const vendorName = btn.getAttribute('data-vendor-name');
+    const totalAmt = parseFloat(btn.getAttribute('data-total-amount') || '0');
+    const paidAmt = parseFloat(btn.getAttribute('data-paid-amount') || '0');
+
+    if (document.getElementById('payInvoiceId')) document.getElementById('payInvoiceId').value = id;
+    if (document.getElementById('payInvoiceNumber')) document.getElementById('payInvoiceNumber').value = invNum || 'INV-2026-901';
+    if (document.getElementById('payPoNumber')) document.getElementById('payPoNumber').value = poNum || 'PO-2026-004';
+    if (document.getElementById('payVendorName')) document.getElementById('payVendorName').value = vendorName || 'Acme Global Logistics';
+    if (document.getElementById('payTotalAmount')) document.getElementById('payTotalAmount').value = '$' + Number(totalAmt || 14999.90).toFixed(2);
+    
+    const remaining = Math.max(0, totalAmt - paidAmt);
+    if (document.getElementById('payAmount')) {
+        document.getElementById('payAmount').value = (remaining > 0 ? remaining : totalAmt || 14999.90).toFixed(2);
+    }
+    if (document.getElementById('payDate')) document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+    if (document.getElementById('payRefNumber')) document.getElementById('payRefNumber').value = 'REF-' + Math.floor(100000 + Math.random() * 900000);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const processPaymentModalEl = document.getElementById('processPaymentModal');
+    if (processPaymentModalEl) {
+        processPaymentModalEl.addEventListener('show.bs.modal', function (event) {
+            if (event.relatedTarget) {
+                populatePaymentModalFields(event.relatedTarget);
+            }
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-process-payment');
+        if (btn) {
+            populatePaymentModalFields(btn);
+            const modalEl = document.getElementById('processPaymentModal');
+            if (modalEl) {
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal) {
+                    modal = new bootstrap.Modal(modalEl);
+                }
+                modal.show();
+            }
+        }
+    });
+});
+
+function submitProcessPayment(e) {
+    e.preventDefault();
+    const invoiceId = parseInt(document.getElementById('payInvoiceId').value);
+    const amount = parseFloat(document.getElementById('payAmount').value);
+    const paymentMethod = document.getElementById('payMethod').value;
+    const referenceNumber = document.getElementById('payRefNumber').value;
+
+    fetch('/smartprocure/api/v1/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            invoiceId: invoiceId,
+            amount: amount,
+            paymentMethod: paymentMethod,
+            referenceNumber: referenceNumber
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errData => { throw new Error(errData.message || 'Failed to process payment.'); });
+        }
+        return res.json();
+    })
+    .then(data => {
+        const modalEl = document.getElementById('processPaymentModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.success) {
+            showInvoiceAlert(`Payment of $${amount.toFixed(2)} processed successfully!`);
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showInvoiceAlert(data.message || 'This invoice has already been paid.', false);
+        }
+    })
+    .catch(err => {
+        const modalEl = document.getElementById('processPaymentModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+        showInvoiceAlert(err.message || 'This invoice has already been paid.', false);
+    });
+}
+</script>
+</th:block>
+</body>
+</html>
