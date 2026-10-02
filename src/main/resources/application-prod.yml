@@ -14,8 +14,7 @@ spring:
       minimum-idle: 5
       idle-timeout: 300000
 
-  # IMPORTANT:
-  # Do not execute the old MySQL schema.sql on PostgreSQL.
+  # Do not execute the old MySQL schema.sql on PostgreSQL
   sql:
     init:
       mode: never
